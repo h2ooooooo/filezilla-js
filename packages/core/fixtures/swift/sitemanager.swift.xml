@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.66.0" platform="windows">
+    <Servers>
+        <Server>
+            <Host>identity.example.com</Host>
+            <Port>443</Port>
+            <Protocol>12</Protocol>
+            <User>myuser</User>
+            <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+            <Logontype>1</Logontype>
+            <BypassProxy>0</BypassProxy>
+            <Name>Swift Test</Name>
+            <Parameter Name="identpath">/v3/tokens</Parameter>
+            <Parameter Name="identuser">tenant:username</Parameter>
+            <Parameter Name="keystone_version">3</Parameter>
+            <Parameter Name="domain">Default</Parameter>
+        </Server>
+    </Servers>
+</FileZilla3>

@@ -1,0 +1,60 @@
+{
+    "name": "@jalsoedesign/filezilla-cli",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Command-line interface for querying FileZilla sitemanager.xml files",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "bin": {
+        "filezilla-js": "dist/cli.js"
+    },
+    "scripts": {
+        "build": "node ../../scripts/build-package.mjs",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "dev": "tsc --watch",
+        "lint": "eslint src tests --no-error-on-unmatched-pattern --max-warnings 0",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "@jalsoedesign/filezilla-core": "^1.0.0",
+        "chalk": "6.0.0",
+        "@jalsoedesign/filezilla-connector-abstract": "^1.0.0",
+        "@jalsoedesign/filezilla-connector-ftp": "^1.0.0",
+        "@jalsoedesign/filezilla-connector-sftp": "^1.0.0"
+    },
+    "devDependencies": {
+        "vitest": "5.0.0",
+        "typescript": "6.0.3",
+        "tsx": "4.23.13"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=22.22.2"
+    },
+    "files": [
+        "dist",
+        "LICENSE",
+        "examples"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./package.json": "./package.json",
+        "./dist/*": "./dist/*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/h2ooooooo/filezilla-js.git",
+        "directory": "packages/cli"
+    },
+    "homepage": "https://h2ooooooo.github.io/filezilla-js/",
+    "bugs": {
+        "url": "https://github.com/h2ooooooo/filezilla-js/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

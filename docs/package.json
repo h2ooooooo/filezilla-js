@@ -1,0 +1,30 @@
+{
+    "name": "@jalsoedesign/filezilla-docs",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vitepress dev . --host 127.0.0.1",
+        "build": "vitepress build .",
+        "preview": "vitepress preview . --host 127.0.0.1"
+    },
+    "devDependencies": {
+        "sass": "1.104.0",
+        "vitepress": "1.6.4",
+        "vue": "3.5.30"
+    },
+    "overrides": {
+        "vitepress": {
+            "vite": "6.4.3"
+        }
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/h2ooooooo/filezilla-js.git"
+    },
+    "homepage": "https://h2ooooooo.github.io/filezilla-js/",
+    "bugs": {
+        "url": "https://github.com/h2ooooooo/filezilla-js/issues"
+    }
+}

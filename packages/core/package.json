@@ -1,0 +1,52 @@
+{
+    "name": "@jalsoedesign/filezilla-core",
+    "version": "1.0.0",
+    "description": "Read and query FileZilla sitemanager.xml files from Node.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "node ../../scripts/build-package.mjs",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "dev": "tsc --watch",
+        "lint": "eslint src tests --no-error-on-unmatched-pattern --max-warnings 0",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "fast-xml-parser": "5.11.1"
+    },
+    "devDependencies": {
+        "@types/node": "22.20.2",
+        "vitest": "5.0.0",
+        "typescript": "6.0.3",
+        "tsx": "4.23.13"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=22.22.2"
+    },
+    "files": [
+        "dist",
+        "LICENSE"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./package.json": "./package.json",
+        "./dist/*": "./dist/*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/h2ooooooo/filezilla-js.git",
+        "directory": "packages/core"
+    },
+    "homepage": "https://h2ooooooo.github.io/filezilla-js/",
+    "bugs": {
+        "url": "https://github.com/h2ooooooo/filezilla-js/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

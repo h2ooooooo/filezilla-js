@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<FileZilla3 version="3.31.0" platform="windows">
+    <Servers>
+        <Server>
+            <Host>test.rebex.net</Host>
+            <Port>22</Port>
+            <Protocol>1</Protocol>
+            <Type>0</Type>
+            <User>demo</User>
+            <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+            <Logontype>1</Logontype>
+            <TimezoneOffset>0</TimezoneOffset>
+            <PasvMode>MODE_DEFAULT</PasvMode>
+            <MaximumMultipleConnections>0</MaximumMultipleConnections>
+            <EncodingType>Auto</EncodingType>
+            <BypassProxy>0</BypassProxy>
+            <Name>SFTP (root location)</Name>
+            <Comments />
+            <Colour>0</Colour>
+            <LocalDir />
+            <RemoteDir />
+            <SyncBrowsing>0</SyncBrowsing>
+            <DirectoryComparison>0</DirectoryComparison>
+        </Server>
+        <Folder expanded="1">Rebex<Server>
+            <Host>test.rebex.net</Host>
+            <Port>22</Port>
+            <Protocol>1</Protocol>
+            <Type>0</Type>
+            <User>demo</User>
+            <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+            <Logontype>1</Logontype>
+            <TimezoneOffset>0</TimezoneOffset>
+            <PasvMode>MODE_DEFAULT</PasvMode>
+            <MaximumMultipleConnections>0</MaximumMultipleConnections>
+            <EncodingType>Auto</EncodingType>
+            <BypassProxy>0</BypassProxy>
+            <Name>SFTP</Name>
+            <Comments />
+            <Colour>0</Colour>
+            <LocalDir />
+            <RemoteDir />
+            <SyncBrowsing>0</SyncBrowsing>
+            <DirectoryComparison>0</DirectoryComparison>
+        </Server>
+            <Server>
+                <Host>test.rebex.net</Host>
+                <Port>21</Port>
+                <Protocol>6</Protocol>
+                <Type>0</Type>
+                <User>demo</User>
+                <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>FTP</Name>
+                <Comments />
+                <Colour>0</Colour>
+                <LocalDir />
+                <RemoteDir>1 0 3 pub 7 example</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>
+                <DirectoryComparison>0</DirectoryComparison>
+            </Server>
+            <Server>
+                <Host>test.rebex.net</Host>
+                <Port>21</Port>
+                <Protocol>4</Protocol>
+                <Type>0</Type>
+                <User>demo</User>
+                <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>FTP SSL (explicit)</Name>
+                <Comments />
+                <Colour>0</Colour>
+                <LocalDir />
+                <RemoteDir />
+                <SyncBrowsing>0</SyncBrowsing>
+                <DirectoryComparison>0</DirectoryComparison>
+            </Server>
+            <Server>
+                <Host>test.rebex.net</Host>
+                <Port>990</Port>
+                <Protocol>3</Protocol>
+                <Type>0</Type>
+                <User>demo</User>
+                <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>FTP SSL (implicit)</Name>
+                <Comments />
+                <Colour>0</Colour>
+                <LocalDir />
+                <RemoteDir />
+                <SyncBrowsing>0</SyncBrowsing>
+                <DirectoryComparison>0</DirectoryComparison>
+            </Server>
+        </Folder>
+        <Folder expanded="1">Level 1
+            <Folder expanded="1">Level 2
+                <Folder expanded="0">Level 3
+                    <Folder expanded="0">Level 4
+                        <Server>
+                            <Host>deep.example.com</Host>
+                            <Port>21</Port>
+                            <Protocol>6</Protocol>
+                            <Type>0</Type>
+                            <User>demo</User>
+                            <Pass encoding="base64">cGFzc3dvcmQ=</Pass>
+                            <Logontype>1</Logontype>
+                            <TimezoneOffset>0</TimezoneOffset>
+                            <PasvMode>MODE_DEFAULT</PasvMode>
+                            <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                            <EncodingType>Auto</EncodingType>
+                            <BypassProxy>0</BypassProxy>
+                            <Name>FTP (deeply nested)</Name>
+                            <Comments />
+                            <Colour>0</Colour>
+                            <LocalDir />
+                            <RemoteDir />
+                            <SyncBrowsing>0</SyncBrowsing>
+                            <DirectoryComparison>0</DirectoryComparison>
+                        </Server>
+                    </Folder>
+                </Folder>
+            </Folder>
+        </Folder>
+    </Servers>
+</FileZilla3>

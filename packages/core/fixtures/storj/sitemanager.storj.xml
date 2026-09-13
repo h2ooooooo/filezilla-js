@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.66.0" platform="windows">
+    <Servers>
+        <Server>
+            <Host>us-central-1.tardigrade.io</Host>
+            <Port>7777</Port>
+            <Protocol>8</Protocol>
+            <User>myapikey</User>
+            <Pass encoding="base64">bXktYXBpLWtleS1zZWNyZXQ=</Pass>
+            <Logontype>1</Logontype>
+            <BypassProxy>0</BypassProxy>
+            <Name>Storj Test</Name>
+            <Parameter Name="passphrase_hash">abc123hashexample</Parameter>
+        </Server>
+    </Servers>
+</FileZilla3>

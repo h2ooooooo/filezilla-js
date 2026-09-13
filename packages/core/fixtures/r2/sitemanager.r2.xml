@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.66.0" platform="windows">
+    <Servers>
+        <Server>
+            <Host>r2.cloudflarestorage.com</Host>
+            <Port>443</Port>
+            <Protocol>24</Protocol>
+            <User>myaccesskeyid</User>
+            <Pass encoding="base64">bXlzZWNyZXRhY2Nlc3NrZXk=</Pass>
+            <Logontype>1</Logontype>
+            <BypassProxy>0</BypassProxy>
+            <Name>Cloudflare R2 Test</Name>
+            <Parameter Name="jurisdiction">eu</Parameter>
+            <Parameter Name="identuser">account@example.com</Parameter>
+        </Server>
+    </Servers>
+</FileZilla3>

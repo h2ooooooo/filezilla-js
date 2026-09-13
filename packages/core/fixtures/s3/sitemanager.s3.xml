@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.66.0" platform="windows">
+    <Servers>
+        <Server>
+            <Host>s3.amazonaws.com</Host>
+            <Port>443</Port>
+            <Protocol>7</Protocol>
+            <User>EXAMPLE_ACCESS_KEY_ID</User>
+            <Pass encoding="base64">ZXhhbXBsZS1zZWNyZXQtYWNjZXNzLWtleQ==</Pass>
+            <Logontype>1</Logontype>
+            <BypassProxy>0</BypassProxy>
+            <Name>S3 Test</Name>
+            <Parameter Name="region">us-east-1</Parameter>
+            <Parameter Name="ssealgorithm">aws:kms</Parameter>
+            <Parameter Name="ssekmskey">arn:aws:kms:us-east-1:123456789:key/example</Parameter>
+            <Parameter Name="stsrolearn">arn:aws:iam::123456789:role/example</Parameter>
+            <Parameter Name="accelerate">1</Parameter>
+        </Server>
+    </Servers>
+</FileZilla3>

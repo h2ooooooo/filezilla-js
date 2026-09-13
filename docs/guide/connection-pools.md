@@ -1,0 +1,59 @@
+# Connection pools and registered providers
+
+The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+
+## One connection budget
+
+```ts
+import {ConnectorPool} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+
+const pool = new ConnectorPool({
+    create: () => SftpConnectorFactory.fromServer(site, verifiedConnectionOptions),
+    maxConnections: 3,
+    serverMaxConnections: site.properties.maximumMultipleConnections,
+    idleTimeoutMs: 30_000,
+});
+
+try {
+    await Promise.all(paths.map(path => pool.withConnection(async connector => {
+        await connector.write(path, () => openSource(path), {abortSignal});
+    }, {abortSignal})));
+} finally {
+    await pool.close();
+}
+```
+
+The pool creates independent authenticated sessions, not parallel commands on one FTP session. The default limit is three. A positive `serverMaxConnections` lowers that limit; zero means no additional saved-site limit. Every lease counts, including folder listing, stat, checksums, read consumption and uploads. Connections created outside this pool cannot be counted by it; use one shared pool for a shared server quota.
+
+The creation callback receives an `abortSignal` for cancellation-aware setup. Do not pre-create shared connector instances: each creation must return an independent connector owned by this pool. All trust/provider configuration applies to every new session. Repeated sessions can therefore require repeated application prompts unless the application's trust or credential provider remembers decisions.
+
+Acquisition uses FIFO queuing, supports cancellation and defaults to a 30-second deadline. A cancelled slow creation remains counted until its connector can be closed; the pool does not open an extra session merely to hide a slow factory. `stats` reports the effective limit, owned connections, active/creating sessions and queued requests.
+
+## Streams, iterators and explicit leases
+
+`withConnection` tracks operations, returned readable streams, asynchronous listing iterators and a walk's entries. A returned read retains its lease until fully consumed or destroyed. A returned iterator retains it until completion or explicit `return()`. Consume or close each resource: leaving a stream idle also leaves that server connection occupied.
+
+For explicit ownership, use `const lease = await pool.acquire(options)`, work through `lease.connector`, then `await lease.release()`. Release waits for tracked work; calls through a released proxy fail. Do not return the connector itself, save unbound methods for later, or use its internals outside the lease.
+
+Idle sessions are closed after 30 seconds by default; zero disables idle eviction. Broken sessions are disposed rather than returned to the pool. `close()` rejects queued acquisitions and waits for active leases. `close({force: true})` invalidates leases and interrupts their streams/operations. Shutdown has a 30-second default deadline, overridable through `timeoutMs`; a connector that refuses to close yields a timeout rather than a false cleanup guarantee.
+
+## Explicit connector registry
+
+```ts
+import {ConnectorRegistry} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {ServerProtocol} from '@jalsoedesign/filezilla-core';
+
+const registry = new ConnectorRegistry();
+const sftp = registry.register({
+    protocols: [ServerProtocol.SFTP],
+    factory: new SftpConnectorFactory(),
+});
+
+const connector = sftp.fromServer(site, verifiedSftpOptions);
+```
+
+Registration is explicit: no dependency scanning, automatic imports or arbitrary plugin loading. Duplicate protocols are rejected unless registration explicitly passes `{replace: true}`. `protocols()` returns the registered protocol IDs. Unsupported protocols fail before connection.
+
+The returned registration handle preserves provider-specific TypeScript options and connector methods. `registry.fromServer(site, options)` provides dynamic dispatch and returns the general storage adapter interface; it cannot infer a protocol's option type at runtime. Providers can supply `validateOptions` for runtime configuration validation. Typed registration does not remove the concrete factory's responsibility to enforce authentication and trust requirements.

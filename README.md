@@ -55,3 +55,5 @@ npm run docs:build
 Dockline is installed from npm. Tests use disposable local servers and public test fixtures. See [release setup](docs/development/releasing.md) for GitHub, Pages and npm publishing instructions.
 
 FileZilla TS is an independent project and is not affiliated with or endorsed by the FileZilla project. Licensed under MIT.
+
+See [updates and releases](https://h2ooooooo.github.io/filezilla-js/development/releasing.html) for updating all packages, publishing to npm and deploying documentation.

@@ -61,7 +61,7 @@ const groups = [
             {text: 'Testing', link: '/development/testing'},
             {text: 'Contributing', link: '/development/contributing'},
             {text: 'Documentation', link: '/development/documentation'},
-            {text: 'Release setup', link: '/development/releasing'},
+            {text: 'Updates and releases', link: '/development/releasing'},
         ],
     },
 ];
@@ -87,6 +87,10 @@ export default defineConfig({
         sidebar: groups,
         search: {provider: 'local'},
         outline: {level: [2, 3], label: 'On this page'},
+        editLink: {
+            pattern: 'https://github.com/h2ooooooo/filezilla-js/blob/main/docs/:path',
+            text: 'View this page on GitHub',
+        },
         socialLinks: [{icon: 'github', link: 'https://github.com/h2ooooooo/filezilla-js'}],
         footer: {
             message: 'Documentation for the filezilla-js library. An independent project.',

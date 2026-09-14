@@ -24,3 +24,17 @@ Core is CommonJS; CLI/bridges and Dockline are ESM. These are Node packages. Bro
 Package allowlists retain generated runtime/declarations, MIT licenses and README/package metadata. CLI additionally includes its reviewed `examples/transfer-recipes.ts`. Root package inventory checks all five FileZilla packages; the isolated consumer check packs the five FileZilla packages and installs their Dockline dependencies from npm, then verifies strict types, class identity and the built CLI.
 
 See the [public API index](/reference/public-api), [compiler](/development/compiler) and [Dockline split](/guide/dockline) for ownership and compatibility details.
+
+## Package links
+
+All packages belong to the [FileZilla TS repository](https://github.com/h2ooooooo/filezilla-js); the CLI source is in [packages/cli](https://github.com/h2ooooooo/filezilla-js/tree/main/packages/cli). Each npm package has its own page.
+
+| Package | npm | GitHub source |
+| --- | --- | --- |
+| `@jalsoedesign/filezilla-core` | [npm](https://www.npmjs.com/package/@jalsoedesign/filezilla-core) | [packages/core](https://github.com/h2ooooooo/filezilla-js/tree/main/packages/core) |
+| `@jalsoedesign/filezilla-connector-abstract` | [npm](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-abstract) | [packages/connector-abstract](https://github.com/h2ooooooo/filezilla-js/tree/main/packages/connector-abstract) |
+| `@jalsoedesign/filezilla-connector-ftp` | [npm](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-ftp) | [packages/connector-ftp](https://github.com/h2ooooooo/filezilla-js/tree/main/packages/connector-ftp) |
+| `@jalsoedesign/filezilla-connector-sftp` | [npm](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-sftp) | [packages/connector-sftp](https://github.com/h2ooooooo/filezilla-js/tree/main/packages/connector-sftp) |
+| `@jalsoedesign/filezilla-cli` | [npm](https://www.npmjs.com/package/@jalsoedesign/filezilla-cli) | [packages/cli](https://github.com/h2ooooooo/filezilla-js/tree/main/packages/cli) |
+
+See [updates and releases](/development/releasing) for workspace versioning, publishing and documentation deployment.

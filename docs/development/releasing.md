@@ -1,43 +1,42 @@
-# GitHub and npm release setup
+# Updates, releases and documentation
 
-The repository is [h2ooooooo/filezilla-js](https://github.com/h2ooooooo/filezilla-js). Public documentation is [h2ooooooo.github.io/filezilla-js](https://h2ooooooo.github.io/filezilla-js/). Each package README starts with that documentation link and its npm homepage uses the same URL.
+[GitHub repository](https://github.com/h2ooooooo/filezilla-js) · [Public documentation](https://h2ooooooo.github.io/filezilla-js/) · [Workflow runs](https://github.com/h2ooooooo/filezilla-js/actions)
 
-## Create the GitHub repository
+The repository contains five public npm packages. The CLI is one of those workspaces, not a separate Git repository. Library and CLI documentation share this VitePress site. Each page links to its Markdown source on GitHub, and the package reference links to each package's source and npm page.
 
-Create an empty public repository named `filezilla-js` under `h2ooooooo`. Do not initialize it with a README, license or .gitignore when uploading this existing repository. If it already exists, inspect its contents before pushing; do not overwrite existing history blindly.
+## Choose what to update
 
-From the repository directory, add the remote if it is not already configured:
+| Change | Required release |
+| --- | --- |
+| Only files in docs/ | Build the docs, commit and push main; Pages deploys the site. No npm version bump is needed. |
+| Package README or homepage metadata | Publish a new version of each affected package to update its npm presentation. A GitHub push alone does not update npm. |
+| Package behavior, declarations or dependencies | Choose a semantic version, validate affected consumers and publish the affected packages. |
+| All five packages together | Version and validate the workspaces together, then publish them sequentially in dependency order. |
 
-```sh
-git remote add origin https://github.com/h2ooooooo/filezilla-js.git
-git push -u origin main
-```
+Published name/version pairs are immutable. A message saying a version is already published is not a reason to retry or unpublish it. Check the registry and resume only the unfinished packages. The website tracks main; installed packages track the versions selected by each consumer's lockfile.
 
-The initial commit contains the complete source, tests, public docs and workflows. A Git push does not publish npm packages.
+## Prepare all workspace versions together
 
-If GitHub already has a separately initialized history, the normal push will be rejected. Fetch and inspect that history before deciding whether to preserve it or deliberately replace it. Replacing an existing branch requires an explicitly approved force-with-lease push; never use an unconditional force push.
-
-## Enable GitHub Pages
-
-1. Open the GitHub repository's Settings → Pages.
-2. Under Build and deployment, choose GitHub Actions as the source.
-3. Push main, or open Actions → Deploy VitePress docs to Pages → Run workflow.
-4. Wait for the deploy job to finish, then open the documentation URL above.
-
-The workflow uses the github-pages environment and only grants Pages write and identity-token permissions to the deployment job. No personal access token is required. You can also set the repository's About website to the documentation URL.
-
-## npm account and scope
-
-The packages use `@jalsoedesign`. Sign in with that npm user account, or an account authorized to publish in that scope. A personal account's matching scope works without creating a separate organization. Enable two-factor authentication and complete publishing prompts.
+Run this from the repository root when intentionally preparing the next patch release of every package:
 
 ```sh
-npm login --registry=https://registry.npmjs.org/
-npm whoami --registry=https://registry.npmjs.org/
+npm version patch --workspaces --include-workspace-root --no-git-tag-version
 ```
 
-## Validate a release
+This increments each selected manifest's version without making a Git commit or tag. Packages already on different versions keep their separate version lines. Use an explicit version instead of patch only when intentionally aligning every package; use minor for compatible features or major for breaking changes.
 
-Use the declared Node/npm versions. Run each command only after the previous one succeeds:
+Review dependencies, devDependencies and peerDependencies between workspaces. Raise a minimum version when a dependent needs a newly introduced API or fix; do not assume the version command updates every compatibility range. Preserve optional protocol-client peers. The separate private docs project does not need the library release number. Refresh and review the lockfile after any range edits:
+
+```sh
+npm install --package-lock-only --ignore-scripts
+git diff -- package.json package-lock.json packages
+```
+
+For a single-package release, replace --workspaces and --include-workspace-root with `--workspace=<package-name>`. Include dependents when their required ranges or public contracts change. Update examples and any version-specific documentation.
+
+## Validate before publishing
+
+Use the Node/npm versions declared in package.json. Run these commands one at a time and stop on any failure:
 
 ```sh
 npm ci
@@ -54,31 +53,92 @@ npm run docs:build
 npm publish --workspaces --access public --dry-run
 ```
 
-Review the package inventories. The private root and docs project are not published. See [dependencies](/development/dependencies) for development-only advisory limitations.
+Review the dry-run package inventories. Root and docs projects are private. Production and docs audits are separate from development test-server findings; see [dependencies](/development/dependencies). Packed-consumer checks validate installed artifacts rather than relying on workspace hoisting.
 
-## Publish packages
+## Publish all packages in one sequence
 
-Publish one at a time in dependency order:
+Sign in to npm with the jalsoedesign account or an account authorized for its scope. A matching personal scope does not require a separate organization:
 
 ```sh
-npm publish --workspace=@jalsoedesign/filezilla-core --access public
-npm publish --workspace=@jalsoedesign/filezilla-connector-abstract --access public
-npm publish --workspace=@jalsoedesign/filezilla-connector-ftp --access public
-npm publish --workspace=@jalsoedesign/filezilla-connector-sftp --access public
-npm publish --workspace=@jalsoedesign/filezilla-cli --access public
+npm login --registry=https://registry.npmjs.org/
+npm whoami --registry=https://registry.npmjs.org/
 ```
 
-Wait for each command to succeed before continuing. If a release stops partway through, resume with packages that have not been published. Published name/version pairs cannot be reused. Later releases, including README changes, require a new package version; update internal dependency ranges when compatibility requires it.
+The following PowerShell block publishes every package in dependency order and stops immediately on failure. It performs real public releases; run it only after reviewing the versions and validation results. Complete any npm authentication prompts.
 
-## Verify installation
+```powershell
+$releasePackages = @(
+    '@jalsoedesign/filezilla-core',
+    '@jalsoedesign/filezilla-connector-abstract',
+    '@jalsoedesign/filezilla-connector-ftp',
+    '@jalsoedesign/filezilla-connector-sftp',
+    '@jalsoedesign/filezilla-cli'
+)
+
+foreach ($packageName in $releasePackages) {
+    npm publish --workspace=$packageName --access public
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Publishing stopped at $packageName. Check npm before resuming."
+    }
+}
+```
+
+This is a sequence, not an atomic transaction: earlier packages remain published if a later package fails. Check each package with `npm view <package-name> versions --json` and remove successful entries from the list before resuming. Do not rerun the full list after a partial release. Use npm publish `--workspace=<package-name>` --access public to release just one package.
+
+After publishing, verify npm metadata and installation:
 
 ```sh
-npm view @jalsoedesign/filezilla-core version
-npm view @jalsoedesign/filezilla-cli homepage
+npm view @jalsoedesign/filezilla-cli version repository homepage
 npm install -g @jalsoedesign/filezilla-cli
 filezilla-js --help
 ```
 
-For SDK use, follow the [quick start](/guide/quick-start). The CLI runs local saved-site queries; it contacts a server only when an explicit connection check is requested.
+## Commit and push source or documentation updates
 
-References: [npm scoped packages](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/), [npm publishing](https://docs.npmjs.com/cli/v11/commands/npm-publish/), [GitHub Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+Review the diff and explicitly stage the intended files. Commit and push are separate actions from the build, version and npm publishing commands:
+
+```sh
+git status --short
+git diff
+git diff --cached
+git commit -m "Update packages and documentation"
+git push origin main
+```
+
+Stage the reviewed paths with `git add <paths>` before the commit. Use a descriptive message matching the actual change. For a package release, commit the validated manifests, lockfile, source and docs before publishing so package metadata can identify the release commit. A push to main runs CI and the Pages workflow; it does not publish npm packages. Wait for successful workflow runs before treating the online docs as updated.
+
+## GitHub and Pages setup
+
+The canonical repository is [h2ooooooo/filezilla-js](https://github.com/h2ooooooo/filezilla-js). For a new remote, create it without generated files and configure origin with git remote add origin https://github.com/h2ooooooo/filezilla-js.git. If a separately initialized history already exists, inspect it before deciding whether to preserve or replace it. A normal rejected push does not justify an unconditional force push.
+
+1. Open [Settings → Pages](https://github.com/h2ooooooo/filezilla-js/settings/pages).
+2. Choose GitHub Actions under Build and deployment.
+3. Push main, or run Deploy VitePress docs to Pages from the Actions tab.
+4. Wait for deployment and open [the documentation](https://h2ooooooo.github.io/filezilla-js/).
+
+On the repository's Code page, the right-hand About section has a gear button. Set Website to https://h2ooooooo.github.io/filezilla-js/. The website field is not in the main Settings page. No personal access token is required for the prepared Pages workflow.
+
+## Coordinate Dockline and FileZilla releases
+
+There is no transaction spanning the two repositories or all npm packages. Follow this order when an update affects both:
+
+1. In Dockline, prepare and validate its packages using the [Dockline release guide](https://h2ooooooo.github.io/dockline/development/releasing.html).
+2. Commit the reviewed Dockline release, publish the needed Dockline versions and push its source/docs when ready.
+3. In FileZilla, update the Dockline dependency ranges when a new minimum is required. Review the root development dependencies, bridge package dependencies and the isolated consumer's Dockline version requirement in scripts/check-consumer.mjs.
+4. For compatible updates within existing ranges, run the following from FileZilla's root, then validate the build, tests and packed consumers:
+
+```sh
+npm update @jalsoedesign/dockline-abstract @jalsoedesign/dockline-core @jalsoedesign/dockline-ftp-client @jalsoedesign/dockline-sftp-client --workspaces --include-workspace-root
+```
+
+5. Prepare and publish the affected FileZilla versions, including its CLI when its dependencies or packaged content change. Push the reviewed FileZilla source/docs.
+6. Update each consuming application's declared package versions and lockfile, then test the application. A published dependency does not automatically refresh an existing lockfile.
+
+For documentation-only work, build and push each repository independently; no npm release is necessary unless package README or metadata must also change. There is no need to create a separate filezilla-cli Git repository or documentation site.
+
+## Update an installed application
+
+In an application's own repository, npm update refreshes installed packages within its declared ranges and updates its lockfile. Select only the packages that application uses. Install an explicit new version to adopt a new minimum or major version, then run the application's tests before committing its manifest and lockfile. Do not install optional clients that the application does not use.
+
+References: [npm workspace versioning](https://docs.npmjs.com/cli/v11/commands/npm-version/), [publishing scoped packages](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/), [GitHub Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).

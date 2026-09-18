@@ -32,8 +32,8 @@ Options:
   --help, -h                Show this help message
 
 Examples:
-  filezilla-js --search ordlab --show-password
-  filezilla-js search 206.189.28.138
+  filezilla-js --search clientName --show-password
+  filezilla-js search 10.2.3.4
   filezilla-js list
   filezilla-js list --json
   filezilla-js list --table

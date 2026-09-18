@@ -36,13 +36,13 @@ describe('all-fields profile search', () => {
         const server = manager.getServers()[0];
 
         Object.assign(server.propertiesRaw, {
-            comments: 'OrdLab support',
-            localDirectory: 'C:\\Projects\\OrdLab',
-            keyFile: 'keys/ordlab.pem',
+            comments: 'clientName support',
+            localDirectory: 'C:\\Projects\\clientName',
+            keyFile: 'keys/clientName.pem',
             remoteDirectory: '3 0 6 legacy',
         });
 
-        for (const term of ['support', 'projects', 'ordlab.pem', 'legacy']) {
+        for (const term of ['support', 'projects', 'clientname.pem', 'legacy']) {
             expect(manager.searchServers(term, {fields: 'all'})).toEqual([server]);
         }
     });

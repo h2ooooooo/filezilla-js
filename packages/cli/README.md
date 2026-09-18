@@ -27,9 +27,9 @@ npm install -g @jalsoedesign/filezilla-cli
 Search your usual FileZilla configuration; the CLI finds it automatically on Windows, macOS and Linux.
 
 ```sh
-filezilla-js --search ordlab --show-password
-filezilla-js --search 206.189.28.138 --show-password
-filezilla-js search "squarechilli.co.uk" --json
+filezilla-js --search clientName --show-password
+filezilla-js --search 10.2.3.4 --show-password
+filezilla-js search admin-user --json
 ```
 
 Each match gets a Label/Value table with Name, Path, Protocol, Host, Port, Username, Password and Remote. Passwords are hidden unless you pass `--show-password`. Use `--file <path>` to search another Site Manager XML file.

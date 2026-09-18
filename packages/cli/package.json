@@ -1,6 +1,6 @@
 {
     "name": "@jalsoedesign/filezilla-cli",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "module",
     "description": "Command-line interface for querying FileZilla sitemanager.xml files",
     "main": "dist/index.js",
@@ -17,16 +17,16 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0",
-        "chalk": "6.0.0",
         "@jalsoedesign/filezilla-connector-abstract": "^1.0.0",
         "@jalsoedesign/filezilla-connector-ftp": "^1.0.0",
-        "@jalsoedesign/filezilla-connector-sftp": "^1.0.0"
+        "@jalsoedesign/filezilla-connector-sftp": "^1.0.0",
+        "@jalsoedesign/filezilla-core": "^1.1.0",
+        "chalk": "6.0.0"
     },
     "devDependencies": {
-        "vitest": "5.0.0",
+        "tsx": "4.23.13",
         "typescript": "6.0.3",
-        "tsx": "4.23.13"
+        "vitest": "5.0.0"
     },
     "license": "MIT",
     "engines": {

@@ -3,7 +3,7 @@
 | Package | Manifest version | Responsibility |
 | --- | --- | --- |
 | @jalsoedesign/filezilla-core | 1.0.0 | SiteManager, Server, readers, selected credentials, metadata workflows and enums |
-| @jalsoedesign/filezilla-cli | 1.0.0 | Local list/get queries and an opt-in read-only network check |
+| @jalsoedesign/filezilla-cli | 1.0.0 | Profile search, local list/get queries and a read-only network check |
 | @jalsoedesign/filezilla-connector-abstract | 1.0.0 | FileZilla factory/registry contracts and Dockline compatibility exports |
 | @jalsoedesign/filezilla-connector-ftp | 1.0.0 | Saved FTP/FTPS configuration conversion and Dockline FTP compatibility exports |
 | @jalsoedesign/filezilla-connector-sftp | 1.0.0 | Saved SFTP conversion, read-only FileZilla host-key import and Dockline SFTP compatibility exports |

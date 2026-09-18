@@ -1,10 +1,16 @@
 # Introduction
 
-FileZilla TS reads saved FileZilla Site Manager configuration, preserves folder structure, and lets applications select sites by canonical path. Credentials can be excluded or loaded for one selected site. Import diagnostics, stable identities and metadata snapshots support applications that track configuration changes.
+FileZilla TS lets you use your saved FileZilla connections from JavaScript, TypeScript or the terminal. Search profiles by name, host or username, look up connection details, and read local and remote directory settings.
 
-The FTP and SFTP bridge packages convert saved settings to [Dockline](https://h2ooooooo.github.io/dockline/) configuration. Dockline owns connections, authentication, streams and file transfers. FileZilla core remains independent of transport libraries.
+To find a saved profile from the terminal:
 
-The library does not launch FileZilla, automate its UI, write Site Manager XML or own deployment plans. Applications decide when to load credentials, approve host keys and perform remote operations.
+```sh
+filezilla-js --search example.com --show-password
+```
+
+The CLI finds your FileZilla configuration automatically and displays a table for each match. See [installation](/guide/installation) to install the CLI or library.
+
+The core library reads Site Manager XML and preserves its folder structure. For uploads and downloads, the FTP and SFTP packages connect saved sites through [Dockline](https://h2ooooooo.github.io/dockline/).
 
 Start with [installation](/guide/installation), the [quick start](/guide/quick-start), [FTP](/guide/ftp), [SFTP](/guide/sftp) or the [CLI](/reference/cli). The [specification](/reference/specification) describes behavior and limitations.
 

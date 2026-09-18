@@ -29,7 +29,7 @@ new SiteManager(xml: XmlConfig, options?: SiteManagerReadOptions)
 | --- | --- | --- |
 | `getServers()` | Server[] | Live flat array; treat as read-only unless deliberately editing memory |
 | `getServerByPath(path)` | Server or null | Exact case-sensitive canonical selection |
-| `searchServers(term)` | Server[] | Case-insensitive substring of canonical path or decoded site name |
+| `searchServers(term, options?)` | Server[] | Case-insensitive name/path substring; `{fields: 'all'}` includes all loaded values and decoded remote paths |
 | `getServersTree(servers?)` | ServerTree | Rebuild nonempty hierarchy from all or selected records |
 | `toJSON()` | `{servers: metadata[]}` | Password-redacted records, retaining raw encoded remote-directory metadata |
 | `importDiagnostics` | readonly SiteImportDiagnostic[] | Redacted structural locations and error/warning codes |

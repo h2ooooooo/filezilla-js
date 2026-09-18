@@ -337,13 +337,24 @@ export class SiteManager {
         return this.#servers.find(server => server.path === path) ?? null;
     }
 
-    public searchServers(term: string): Server[] {
+    public searchServers(term: string, options: {fields?: 'name' | 'all'} = {}): Server[] {
         const lowerTerm = term.toLowerCase();
 
-        return this.#servers.filter(server =>
-            server.path.toLowerCase().includes(lowerTerm) ||
-            server.propertiesRaw.name.toLowerCase().includes(lowerTerm),
-        );
+        return this.#servers.filter(server => {
+            const values: unknown[] = [server.path, server.propertiesRaw.name];
+
+            if (options.fields === 'all') {
+                values.push(server.siteProtocolName, ...Object.values(server.propertiesRaw));
+
+                try {
+                    values.push(server.getRemoteDirectory());
+                } catch {
+                    // Unsupported paths remain searchable in their original encoded form.
+                }
+            }
+
+            return values.some(value => value !== undefined && String(value).toLowerCase().includes(lowerTerm));
+        });
     }
 
     public getServersTree(servers: Server[] = this.#servers): ServerTree {

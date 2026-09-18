@@ -5,7 +5,15 @@ const web = manager.getServerByPath('Production/Web');
 const matches = manager.searchServers('production');
 ```
 
-Exact selection compares canonical paths case-sensitively. Search matches a case-insensitive substring of the canonical path or decoded site name; an empty search matches every site. Neither filters by host or protocol. Search does not decode remote directories.
+Exact selection compares canonical paths case-sensitively. Search matches a case-insensitive substring of the canonical path or decoded site name; an empty search matches every site.
+
+To search all loaded fields, pass `{fields: 'all'}`:
+
+```ts
+const profiles = manager.searchServers('example.com', {fields: 'all'});
+```
+
+All-fields search includes every raw property value, the canonical path, protocol name and decoded remote directory. Numeric and boolean values are matched as text. Passwords are searchable only when loaded; searching does not load additional credentials. Unsupported remote directories remain searchable in their encoded form. The default name/path search does not decode remote directories.
 
 ## Canonical identities
 

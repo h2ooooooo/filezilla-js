@@ -12,7 +12,7 @@ Read saved FileZilla sites from Node.js or a CLI, select the configuration you n
 | `@jalsoedesign/filezilla-connector-abstract` | FileZilla factories, provider registry and shared Dockline exports |
 | `@jalsoedesign/filezilla-connector-ftp` | Saved FTP/FTPS configuration mapped to Dockline |
 | `@jalsoedesign/filezilla-connector-sftp` | Saved SFTP configuration and FileZilla host-key import |
-| `@jalsoedesign/filezilla-cli` | Saved-site list/get commands and an explicit read-only connection check |
+| `@jalsoedesign/filezilla-cli` | Profile search, saved-site list/get commands and a read-only connection check |
 
 ## Install
 
@@ -34,6 +34,7 @@ Install the terminal utility:
 
 ```sh
 npm install -g @jalsoedesign/filezilla-cli
+filezilla-js --search example.com --show-password
 filezilla-js --help
 ```
 

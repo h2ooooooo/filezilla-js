@@ -2,6 +2,7 @@ import {getDefaultSiteManager, getSiteManager} from '@jalsoedesign/filezilla-cor
 import {CommandContext, CommandHandler} from './types.js';
 import {listCommand} from './commands/list.js';
 import {getCommand} from './commands/get.js';
+import {searchCommand} from './commands/search.js';
 import {runCheckCommand} from './commands/check.js';
 
 export {checkConnection} from './commands/check.js';
@@ -14,6 +15,7 @@ Usage: filezilla-js <command> [options] [args]
 
 Commands:
   list                      List all servers
+  search <term>             Search all saved fields and show profile details
   get <path> [property]    Get a server or a specific property value
   check <path>              Check a connection without remote mutations (check --help)
 
@@ -21,7 +23,7 @@ Options:
   --file <path>             Specify the sitemanager.xml file path
   --json                    Output in JSON format
   --table                   Output in table format
-  --search <term>           Search for a server by name or path
+  --search <term>           Search all fields without a command; name/path with list/get
   --recurse                 Return results in a nested structure (requires --json)
   --full                    Return full server properties when using list command
   --show-password           Show the actual password in output (otherwise hidden)
@@ -30,6 +32,8 @@ Options:
   --help, -h                Show this help message
 
 Examples:
+  filezilla-js --search ordlab --show-password
+  filezilla-js search 206.189.28.138
   filezilla-js list
   filezilla-js list --json
   filezilla-js list --table
@@ -59,7 +63,11 @@ function parseArgs() {
             options.showPassword = true;
         } else if (arg === '--file' && i + 1 < args.length) {
             options.file = args[++i];
-        } else if (arg === '--search' && i + 1 < args.length) {
+        } else if (arg === '--search') {
+            if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
+                throw new Error('--search requires a term');
+            }
+
             options.search = args[++i];
         } else if (arg === '--help' || arg === '-h') {
             options.help = true;
@@ -80,20 +88,32 @@ export async function run() {
         return;
     }
 
-    const {options, positional} = parseArgs();
+    let parsed: ReturnType<typeof parseArgs>;
 
-    if (options.help || positional.length === 0) {
+    try {
+        parsed = parseArgs();
+    } catch (error: any) {
+        console.error(process.argv.includes('--json') ?
+            JSON.stringify({error: error.message}) :
+            `Error: ${error.message}`);
+        process.exit(1);
+    }
+
+    const {options, positional} = parsed;
+
+    if (options.help || (positional.length === 0 && options.search === undefined)) {
         showHelp();
 
         return;
     }
 
-    const command = positional[0];
+    const command = positional[0] ?? 'search';
     const commandArgs = positional.slice(1);
 
     const commands: Record<string, CommandHandler> = {
         list: listCommand,
         get: getCommand,
+        search: searchCommand,
     };
 
     const handler = commands[command];

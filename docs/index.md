@@ -3,7 +3,7 @@ layout: home
 hero:
   name: FileZilla TS
   text: Your saved sites. In your code.
-  tagline: Read FileZilla Site Manager settings and connect selected sites through the independent Dockline SDK.
+  tagline: Find saved FileZilla connections from your terminal or use them in JavaScript and TypeScript.
   actions:
     - theme: brand
       text: Start with the guide
@@ -22,7 +22,7 @@ features:
     details: Convert saved settings to Dockline configuration, then upload or download a file through one shared API.
     link: /guide/dockline
   - title: Query from the terminal
-    details: Query saved sites and run an optional read-only connection check with versioned JSON results.
+    details: Search by name, host or username, display connection details, and test saved connections.
     link: /reference/cli
   - title: Know the boundaries
     details: API contracts, transfer guarantees and protocol limitations.

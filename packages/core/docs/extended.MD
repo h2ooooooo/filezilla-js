@@ -35,8 +35,8 @@ The primary interface for interacting with a collection of FileZilla servers.
 - `getServerByPath(path: string): Server | null`\
   Retrieves a specific server by its full folder path (e.g., `Work/Production/Web Server`). Returns `null` if not found.
 
-- `searchServers(term: string): Server[]`\
-  Searches for servers where the path or name matches the given search term (case-insensitive).
+- `searchServers(term: string, options?: {fields?: 'name' | 'all'}): Server[]`\
+  Matches a case-insensitive substring of the path or name by default. Pass `{fields: 'all'}` to include every loaded property value, the protocol name and decoded remote directory. Unsupported remote directories are searched in their encoded form. Passwords are searchable only when loaded; search does not load additional credentials.
 
 - `getServersTree(servers?: Server[]): ServerTree`\
   Rebuilds the hierarchical folder structure from the given list of servers. If no servers are provided, it uses all servers in the manager.

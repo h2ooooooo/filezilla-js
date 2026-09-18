@@ -11,7 +11,7 @@ FileZilla core owns reading and metadata. FileZilla factories own conversion to 
 - Plain/base64 credentials preserve decoded text. Protected encodings are omitted; selected loading uses the same canonical identity as lookup.
 - Canonical components escape percent/slash, and duplicate identities fail before credential decoding.
 - Original XML is not retained; manager/server JSON omit passwords and retain raw remote-directory metadata.
-- Exact lookup is case-sensitive; search is case-insensitive and does not decode paths. Explicit decoded-directory access remains strict.
+- Exact lookup is case-sensitive; search is case-insensitive. Default name/path search does not decode remote paths; `{fields: 'all'}` tries decoding and falls back to raw values. Explicit decoded-directory access remains strict.
 
 ## Connecting and trust
 

@@ -2,7 +2,7 @@
 
 # @jalsoedesign/filezilla-cli
 
-The network check and connector recipes now use Dockline through the FileZilla settings bridges. FileZilla owns reading/selection and host-key import; the separate Dockline FTP/SFTP packages own transport. The CLI remains `list`, `get`, and read-only `check`.
+Find saved FileZilla connection details from your terminal. Search by site name, IP address, username or any other saved field, display matching profiles, and copy individual values into scripts.
 
 [![npm version](https://img.shields.io/npm/v/@jalsoedesign/filezilla-cli.svg)](https://www.npmjs.com/package/@jalsoedesign/filezilla-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -24,7 +24,17 @@ npm install -g @jalsoedesign/filezilla-cli
 
 ## Quick start
 
-Get FileZilla sites as JSON with a single command.
+Search your usual FileZilla configuration; the CLI finds it automatically on Windows, macOS and Linux.
+
+```sh
+filezilla-js --search ordlab --show-password
+filezilla-js --search 206.189.28.138 --show-password
+filezilla-js search "squarechilli.co.uk" --json
+```
+
+Each match gets a Label/Value table with Name, Path, Protocol, Host, Port, Username, Password and Remote. Passwords are hidden unless you pass `--show-password`. Use `--file <path>` to search another Site Manager XML file.
+
+Search matches a case-insensitive substring across all loaded fields, including passwords, comments, local directories and decoded remote directories. It does not connect to the servers. JSON output is an array, including `[]` when nothing matches. The existing `list --search` and `get --search` options search names and folder paths.
 
 ### List all sites
 ```bash

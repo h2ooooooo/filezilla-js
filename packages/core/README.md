@@ -2,7 +2,7 @@
 
 # @jalsoedesign/filezilla-core
 
-Core remains independent of Dockline and all transport dependencies. Use a FileZilla concrete factory `toConfig` to convert a selected Server for the separate Dockline SDK; saved Site Manager XML remains read-only.
+Read saved FileZilla sites in JavaScript or TypeScript. Find profiles by name, host, username or other connection details, access saved credentials, and decode remote directory paths.
 
 [![npm version](https://img.shields.io/npm/v/@jalsoedesign/filezilla-core.svg)](https://www.npmjs.com/package/@jalsoedesign/filezilla-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -33,6 +33,16 @@ if (site) {
     console.log(site.getRemoteDirectory());  // e.g. /var/www/html
 }
 ```
+
+## Search profiles
+
+```ts
+const matches = siteManager.searchServers('example.com', {fields: 'all'});
+```
+
+All-fields search checks every loaded property, including passwords, plus the site path, protocol name and decoded remote directory. Omit the options to search only site names and folder paths. Search does not load additional credentials.
+
+For terminal searches, install [the CLI](../cli/README.md) and run `filezilla-js --search example.com --show-password`.
 
 ## Features
 

@@ -1,12 +1,14 @@
 # CLI extended reference
 
-Transfer connections are implemented in the separate Dockline FTP/SFTP dependencies. Existing FileZilla factories remain the configuration bridge; command behavior and read-only check boundaries below are unchanged.
+Search saved FileZilla profiles, retrieve individual connection details, or check whether a saved connection works.
 
 The current [CLI reference](../../../docs/reference/cli.md) documents all query flags and output forms. The [connection-check guide](../../../docs/guide/connection-check.md) documents strict check flags, versioned JSON, selected credentials, deadlines, cleanup and status-specific exit codes.
 
 ## Query saved sites
 
 ```sh
+filezilla-js --search example.com --show-password
+filezilla-js search example.com --json
 filezilla-js list --file ./sitemanager.xml --json
 filezilla-js list --file ./sitemanager.xml --table --full
 filezilla-js get "Production/Web" host --file ./sitemanager.xml

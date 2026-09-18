@@ -34,6 +34,82 @@ const runCli = (args: string[], expectedStatus = 0) => {
 describe('CLI - filezilla-js', () => {
     const multiFixture = fixture('general/sitemanager.multi.xml');
 
+    describe('profile search', () => {
+        it('searches hosts with the commandless shorthand and shows details for every match', () => {
+            const output = runCli(['--search', 'TEST.REBEX.NET', '--file', multiFixture]);
+
+            expect(output).toContain('Found 5 servers');
+            expect(output.match(/Label/g)).toHaveLength(5);
+            expect(output).toContain('Username');
+            expect(output).toContain('Password');
+            expect(output).toContain('(hidden)');
+            expect(output).toContain('/pub/example');
+            expect(output).not.toContain('│ password');
+        });
+
+        it('searches decoded directories and reveals passwords only when requested', () => {
+            const args = [
+                'search',
+                '/pub/example',
+                '--file',
+                multiFixture,
+                '--json',
+            ];
+            const hidden = JSON.parse(runCli(args));
+            const revealed = JSON.parse(runCli([...args, '--show-password']));
+
+            expect(hidden.length).toBeGreaterThan(0);
+            expect(hidden[0]).toMatchObject({remoteDirectory: '/pub/example', password: '(hidden)'});
+            expect(revealed[0].password).toBe('password');
+        });
+
+        it('searches usernames and passwords independently of password display', () => {
+            for (const term of ['DEMO', 'PASSWORD']) {
+                const profiles = JSON.parse(runCli([
+                    'search',
+                    term,
+                    '--file',
+                    multiFixture,
+                    '--json',
+                ]));
+
+                expect(profiles).toHaveLength(6);
+                expect(profiles.every((profile: any) => profile.password === '(hidden)')).toBe(true);
+            }
+        });
+
+        it('returns successful empty results and allows an empty term to match all sites', () => {
+            expect(runCli(['search', 'absent.invalid', '--file', multiFixture]).trim()).toBe('Found 0 servers');
+            expect(JSON.parse(runCli([
+                'search',
+                'absent.invalid',
+                '--file',
+                multiFixture,
+                '--json',
+            ]))).toEqual([]);
+            expect(JSON.parse(runCli([
+                '--search',
+                '',
+                '--file',
+                multiFixture,
+                '--json',
+            ]))).toHaveLength(6);
+        });
+
+        it('rejects missing or ambiguous search arguments', () => {
+            expect(runCli(['--search'], 1)).toContain('--search requires a term');
+            expect(JSON.parse(runCli(['--search', '--json'], 1)).error).toContain('--search requires a term');
+            expect(runCli(['search', '--file', multiFixture], 1)).toContain('Specify one search term');
+            expect(runCli([
+                'search',
+                'one',
+                'two',
+                '--file',
+                multiFixture,
+            ], 1)).toContain('Specify one search term');
+        });
+    });
+
     describe('list command', () => {
         it('should list all servers as plain text by default', () => {
             const output = runCli(['list', '--file', multiFixture]);
@@ -352,6 +428,17 @@ describe('CLI - filezilla-js', () => {
 
             try {
                 fs.writeFileSync(localFixture, `<FileZilla3><Servers>${site('Unsupported', '3 0 3 abc')}${site('Target')}</Servers></FileZilla3>`);
+
+                const profiles = JSON.parse(runCli([
+                    'search',
+                    'example.invalid',
+                    '--file',
+                    localFixture,
+                    '--json',
+                ]));
+
+                expect(profiles).toHaveLength(2);
+                expect(profiles[0].remoteDirectory).toContain('3 0 3 abc (encoded; unsupported path)');
                 expect(runCli([
                     'get',
                     'Unsupported',

@@ -32,7 +32,7 @@ filezilla-js --search 10.2.3.4 --show-password
 filezilla-js search admin-user --json
 ```
 
-Each match gets a Label/Value table with Name, Path, Protocol, Host, Port, Username, Password and Remote. Passwords are hidden unless you pass `--show-password`. Use `--file <path>` to search another Site Manager XML file.
+Each match gets a Label/Value table with Name, Path, Protocol, Host, Port, Username, Password, Private key and Remote. The private-key path is shown without `--show-password`; the key file itself is not read. Passwords are hidden unless you pass `--show-password`. Use `--file <path>` to search another Site Manager XML file.
 
 Search matches a case-insensitive substring across all loaded fields, including passwords, comments, local directories and decoded remote directories. It does not connect to the servers. JSON output is an array, including `[]` when nothing matches. The existing `list --search` and `get --search` options search names and folder paths.
 

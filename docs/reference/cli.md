@@ -19,9 +19,9 @@ Quote paths/search terms containing spaces. Exact selection uses case-sensitive 
 
 `filezilla-js --search <term>` and `filezilla-js search <term>` perform the same all-fields search. Matching is a case-insensitive substring across all loaded property values, the canonical site path and the protocol name. This includes hosts, ports, usernames, loaded passwords, comments, key files and local directories. Remote directories are searched in both encoded and decoded form when decoding is supported.
 
-The default output shows a count and one Label/Value table per match: Name, Path, Protocol, Host, Port, Username, Password and Remote. Passwords stay hidden unless `--show-password` is supplied. An unsupported remote directory is shown in its encoded form with a note, without preventing other results from appearing.
+The default output shows a count and one Label/Value table per match: Name, Path, Protocol, Host, Port, Username, Password, Private key and Remote. The private-key path is shown without `--show-password`; the key file itself is not read. Passwords stay hidden unless `--show-password` is supplied. An unsupported remote directory is shown in its encoded form with a note, without preventing other results from appearing.
 
-`--json` returns an array of profiles with `path`, `name`, `protocol` (display name), `host`, `port`, `user`, `password` and `remoteDirectory`. No matches returns `[]` in JSON or `Found 0 servers` in text, with exit code 0. An empty quoted term matches every profile. `--full` and `--recurse` are list-only options.
+`--json` returns an array of profiles with `path`, `name`, `protocol` (display name), `host`, `port`, `user`, `password`, `keyFile` and `remoteDirectory`. `keyFile` is the saved private-key path, or an empty string when none is configured. No matches returns `[]` in JSON or `Found 0 servers` in text, with exit code 0. An empty quoted term matches every profile. `--full` and `--recurse` are list-only options.
 
 `list --search` and `get --search` keep their name/path matching. Searching reads local configuration and does not contact any server.
 

@@ -19,6 +19,7 @@ function profileDetails(server: Server, options: CommandContext['options']) {
         port: properties.port,
         user: properties.user,
         password: options.showPassword ? properties.password ?? '' : '(hidden)',
+        keyFile: properties.keyFile ?? '',
         remoteDirectory,
     };
 }
@@ -57,6 +58,7 @@ export const searchCommand: CommandHandler = async (ctx: CommandContext) => {
                 ['Port', profile.port],
                 ['Username', profile.user],
                 ['Password', profile.password],
+                ['Private key', profile.keyFile],
                 ['Remote', profile.remoteDirectory],
             ],
         });

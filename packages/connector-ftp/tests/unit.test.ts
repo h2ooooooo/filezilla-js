@@ -1,15 +1,8 @@
 import {describe, it, expect} from 'vitest';
 import {Server, ServerProtocol, LogonType, PasvMode} from '@jalsoedesign/filezilla-core';
-import {FtpConnectorFactory} from '../src/FtpConnectorFactory.js';
-import {FtpConnector} from '../src/FtpConnector.js';
-import {
-    AuthError,
-    NotFoundError,
-    PermissionError,
-    UnsupportedProtocolError,
-    NotSupportedError,
-    ConnectorError,
-} from '../src/errors.js';
+import {FtpConnectorFactory} from '../src/index.js';
+import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
+import {AuthError, NotFoundError, PermissionError, UnsupportedProtocolError, NotSupportedError, ConnectorError} from '@jalsoedesign/dockline-abstract';
 import {FTPError} from 'basic-ftp';
 
 // Helper: build a minimal Server-like object for testing.

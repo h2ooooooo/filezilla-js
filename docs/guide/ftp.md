@@ -1,40 +1,14 @@
 # FTP and FTPS
 
-The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+Factory snippets on this page are reusable integration recipes, not separate programs. Supply a selected native `Server` and any separately trusted CA. A factory returns configuration or a disconnected connector; it does not print or connect automatically.
 
-The adapter uses `basic-ftp` 6.2.1 for passive FTP and explicit/implicit TLS. Active FTP is rejected.
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
+
+The adapter uses `basic-ftp` for passive FTP and explicit/implicit TLS. Active FTP is rejected.
 
 ## Direct configuration
 
-```ts
-import {FtpConnector} from '@jalsoedesign/filezilla-connector-ftp';
-
-const password = process.env.FTP_PASSWORD;
-if (!password) {
-    throw new Error('An FTP password is required.');
-}
-
-const connector = new FtpConnector({
-    host: 'ftp.example.test',
-    port: 21,
-    user: 'deploy',
-    password,
-    secure: true,
-    initialPath: '/releases',
-    passive: true,
-    timeoutMs: 30_000,
-    autoReconnect: false,
-});
-
-try {
-    await connector.connect();
-    for await (const entry of connector.list('', {deep: false})) {
-        console.log(entry.path, entry.type);
-    }
-} finally {
-    await connector.disconnect();
-}
-```
+For a connection defined directly in code, use [Dockline FTP/FTPS](https://h2ooooooo.github.io/dockline/ftp/quick-start). FileZilla is needed only when importing a saved site. The [complete saved FTP program](/guide/quick-start#connect-through-a-saved-ftp-or-ftps-configuration) includes all language/run tabs and output.
 
 ## Saved-site factory
 
@@ -48,7 +22,9 @@ Both static and instance factories accept `fromServer(server, options?)`. Option
 
 Validated XML imports require a valid saved port. Anonymous mode uses `anonymous` and an empty password. Normal mode uses saved credentials. Account mode warns and ignores its account field. Ask and interactive modes require an application `credentialProvider`; key, profile and ADC modes are rejected. See [credential providers](/guide/ftp-options) for supported results and cancellation.
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 import type {Server} from '@jalsoedesign/filezilla-core';
 import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
 
@@ -61,6 +37,47 @@ function fromSavedSite(site: Server, trustedPrivateCa: Buffer) {
     });
 }
 ```
+
+```js [JavaScript]
+import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
+
+function fromSavedSite(site, trustedPrivateCa) {
+    return FtpConnectorFactory.fromServer(site, {
+        timeoutMs: 20_000,
+        autoReconnect: true,
+        maxTransientRetries: 2,
+        secureOptions: {ca: trustedPrivateCa},
+    });
+}
+```
+
+```js [MJS]
+import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
+
+function fromSavedSite(site, trustedPrivateCa) {
+    return FtpConnectorFactory.fromServer(site, {
+        timeoutMs: 20_000,
+        autoReconnect: true,
+        maxTransientRetries: 2,
+        secureOptions: {ca: trustedPrivateCa},
+    });
+}
+```
+
+```js [CommonJS]
+const {FtpConnectorFactory} = require('@jalsoedesign/filezilla-connector-ftp');
+
+function fromSavedSite(site, trustedPrivateCa) {
+    return FtpConnectorFactory.fromServer(site, {
+        timeoutMs: 20_000,
+        autoReconnect: true,
+        maxTransientRetries: 2,
+        secureOptions: {ca: trustedPrivateCa},
+    });
+}
+```
+
+:::
 
 Keep TLS certificate validation enabled. `secureOptions` supports a separately trusted private CA; it is no longer necessary to abandon the factory to configure it.
 

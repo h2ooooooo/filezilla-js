@@ -1,6 +1,6 @@
 # Testing
 
-Dockline owns the protocol implementation and its independent suite. FileZilla retains transport regression coverage against compatibility exports and adds plain-config mapping, cross-package class/error identity, and a real selected-credential → Dockline upload/download test. Install dependencies from npm and run `npm run build` before running individual workspace tests.
+Dockline owns the protocol implementation and its independent suite. FileZilla tests saved-setting mappings, FileZilla-only public entry points, guarded writing and selected-credential transfers through Dockline. Retained transport regression fixtures import Dockline directly. Install dependencies from npm and run `npm run build` before running individual workspace tests.
 
 ## Current commands
 
@@ -13,7 +13,7 @@ npm run test:cli
 npm run test:ftp
 npm run test:sftp
 npm run test:shared
-npm run test:build
+npm run docs:examples:check
 npm run check:packages
 npm run check:consumer
 ```
@@ -35,7 +35,6 @@ The disposable SSH fixture uses encrypted RSA keys to avoid an upstream random E
 Run package inventory after a clean build. Install packed artifacts into an isolated JavaScript/TypeScript consumer without workspace hoisting, resolve public entry points and compile declarations with `skipLibCheck: false`. Test the built CLI separately from its source runner. See [compiler and packaging](/development/compiler).
 
 SFTP status conversion and Windows path normalization remain explicit upstream limitations. A green local suite does not establish that generic SFTP absence or the default Windows wrapper normalizer is resolved. Document those limitations when exposing affected operations.
-
 
 ## Feature acceptance coverage
 

@@ -1,3 +1,6 @@
+import {buildProfileTree, getProfileByPath, searchProfiles} from '@jalsoedesign/portline-core';
+import type {ProfileTree} from '@jalsoedesign/portline-abstract';
+import {fileZillaProfileQuery} from './profile-query';
 import * as fs from 'fs';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
 import {Server, ServerProperties} from './Server';
@@ -5,6 +8,10 @@ import {XmlConfig} from './types/XmlConfigTypes';
 import {ServerFolderNode, ServerTree} from './types/ServerTreeTypes';
 
 export function getDefaultSiteManager(): SiteManager {
+    return getSiteManager(getDefaultSiteManagerPath());
+}
+
+export function getDefaultSiteManagerPath(): string {
     const lookupPaths = [
         process.env.APPDATA && `${process.env.APPDATA}/FileZilla/sitemanager.xml`,
         `${process.env.XDG_CONFIG_HOME || `${process.env.HOME}/.config`}/filezilla/sitemanager.xml`,
@@ -13,7 +20,7 @@ export function getDefaultSiteManager(): SiteManager {
 
     for (const lookupPath of lookupPaths) {
         if (fs.existsSync(lookupPath)) {
-            return getSiteManager(lookupPath);
+            return lookupPath;
         }
     }
 
@@ -252,10 +259,6 @@ function encodePathComponent(component: string): string {
     return component.replace(/%/g, '%25').replace(/\//g, '%2F');
 }
 
-function decodePathComponent(component: string): string {
-    return component.replace(/%(?:25|2f)/gi, value => value.toLowerCase() === '%2f' ? '/' : '%');
-}
-
 export class SiteManager {
     readonly #servers: Server[];
 
@@ -334,51 +337,22 @@ export class SiteManager {
     }
 
     public getServerByPath(path: string): Server | null {
-        return this.#servers.find(server => server.path === path) ?? null;
+        return getProfileByPath(this.#servers, path, fileZillaProfileQuery.path) ?? null;
     }
 
     public searchServers(term: string, options: {fields?: 'name' | 'all'} = {}): Server[] {
-        const lowerTerm = term.toLowerCase();
-
-        return this.#servers.filter(server => {
-            const values: unknown[] = [server.path, server.propertiesRaw.name];
-
-            if (options.fields === 'all') {
-                values.push(server.siteProtocolName, ...Object.values(server.propertiesRaw));
-
-                try {
-                    values.push(server.getRemoteDirectory());
-                } catch {
-                    // Unsupported paths remain searchable in their original encoded form.
-                }
-            }
-
-            return values.some(value => value !== undefined && String(value).toLowerCase().includes(lowerTerm));
-        });
+        return searchProfiles(this.#servers, term, fileZillaProfileQuery, options);
     }
 
     public getServersTree(servers: Server[] = this.#servers): ServerTree {
-        const root: ServerTree = {name: 'Root', folders: [], servers: []};
+        const tree = buildProfileTree(servers, fileZillaProfileQuery);
+        const nativeTree = (folder: ProfileTree<Server>): ServerFolderNode => ({
+            name: folder.name,
+            folders: folder.folders.map(nativeTree),
+            servers: folder.profiles,
+        });
 
-        for (const server of servers) {
-            const parts = server.path.split('/').slice(0, -1).map(decodePathComponent);
-            let currentFolder: ServerFolderNode = root;
-
-            for (const part of parts) {
-                let folder = currentFolder.folders.find(item => item.name === part);
-
-                if (!folder) {
-                    folder = {name: part, folders: [], servers: []};
-                    currentFolder.folders.push(folder);
-                }
-
-                currentFolder = folder;
-            }
-
-            currentFolder.servers.push(server);
-        }
-
-        return root;
+        return {...nativeTree(tree), name: 'Root'};
     }
 
     private collectServers(

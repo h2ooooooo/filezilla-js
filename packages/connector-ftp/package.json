@@ -1,8 +1,8 @@
 {
     "name": "@jalsoedesign/filezilla-connector-ftp",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "type": "module",
-    "description": "FileZilla saved-site FTP/FTPS mapping and Dockline compatibility exports",
+    "description": "Map FileZilla saved sites to Dockline FTP and FTPS settings",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -14,18 +14,19 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@jalsoedesign/filezilla-connector-abstract": "^1.0.0",
-        "@jalsoedesign/dockline-ftp-client": "^1.0.0"
+        "@jalsoedesign/filezilla-connector-abstract": "^2.0.0",
+        "@jalsoedesign/dockline-ftp-client": "^1.1.0",
+        "@jalsoedesign/dockline-abstract": "^1.1.0"
     },
     "peerDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0"
+        "@jalsoedesign/filezilla-core": "^1.2.0"
     },
     "devDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0",
+        "@jalsoedesign/filezilla-core": "^1.2.0",
         "ftp-srv": "4.6.3",
-        "vitest": "5.0.0",
+        "vitest": "5.1.0",
         "typescript": "6.0.3",
-        "basic-ftp": "6.2.1"
+        "basic-ftp": "6.2.6"
     },
     "license": "MIT",
     "engines": {
@@ -33,15 +34,15 @@
     },
     "files": [
         "dist",
-        "LICENSE"
+        "LICENSE",
+        "README.md"
     ],
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
         },
-        "./package.json": "./package.json",
-        "./dist/*": "./dist/*"
+        "./package.json": "./package.json"
     },
     "repository": {
         "type": "git",

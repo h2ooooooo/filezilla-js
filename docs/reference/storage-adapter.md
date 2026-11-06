@@ -1,6 +1,6 @@
 # Storage adapter API
 
-The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
 Both connectors implement Flystorage's `StorageAdapter` and extend applicable options with `ConnectorOperationOptions`. For portable direct calls, pass `{}` and use `{deep: false}` for shallow listing. FTP signatures require their operation options; SFTP supplies defaults for many operations. `connect(options?)` takes shared controls; `disconnect()` does not.
 
@@ -41,8 +41,7 @@ Entries include type, path, file/directory flags, optional millisecond timestamp
 
 **SFTP status conversion:** upstream SFTP lstat can turn generic status 4 into missing, affecting existence checks. **Windows path normalization:** default Flystorage normalization changes separators and misses some traversal inputs on Windows. These remain unresolved; direct adapter improvements do not repair external dependency behavior.
 
-The new [transfer tools](/guide/advanced-transfers) expose `publishFile`, `checksumDetails`, `copyFileWithStrategy`, `walk`, progress and bandwidth. [ConnectorPool](/guide/connection-pools) owns bounded independent sessions; [KnownHostsStore](/guide/ssh-options) provides optional explicit trust persistence. Publication guarantees depend on the protocol: SFTP no-replace rename and optional POSIX atomic replacement are distinct; FTP replacement is explicitly non-atomic. Transactions, general remote containment and symlink prevention remain outside these APIs. Keep deployment policy in the application.
-
+The new [transfer tools](/guide/advanced-transfers) expose `publishFile`, `checksumDetails`, `copyFileWithStrategy`, `walk`, progress and bandwidth. [`ConnectorPool`](/guide/connection-pools) owns bounded independent sessions; [`KnownHostsStore`](/guide/ssh-options) provides optional explicit trust persistence. Publication guarantees depend on the protocol: SFTP no-replace rename and optional POSIX atomic replacement are distinct; FTP replacement is explicitly non-atomic. Transactions, general remote containment and symlink prevention remain outside these APIs. Keep deployment policy in the application.
 
 ## Additional direct connector methods
 
@@ -58,4 +57,4 @@ The new [transfer tools](/guide/advanced-transfers) expose `publishFile`, `check
 | `validatePublicationOptions(options)` | `void` | Synchronous rejection of unsupported overwrite/atomic policy before mutation |
 | `renameFile(from, to, options)` | `Promise<{atomic: boolean}>` | Explicit replace/no-replace and atomic requirement |
 
-Shared option and result interfaces are exported from `@jalsoedesign/filezilla-connector-abstract`. See the guides for defaults, error state and protocol restrictions.
+Shared option and result interfaces are exported from `@jalsoedesign/dockline-abstract`. See the guides for defaults, error state and protocol restrictions.

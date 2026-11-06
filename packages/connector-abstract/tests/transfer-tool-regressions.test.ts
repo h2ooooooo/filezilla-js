@@ -2,11 +2,7 @@ import {describe, expect, it, vi} from 'vitest';
 import {Readable} from 'node:stream';
 import {posix} from 'node:path';
 import type {StatEntry} from '@flystorage/file-storage';
-import {
-    ConnectorError, NotFoundError, NotSupportedError, PermissionError, OperationAbortedError,
-    copyFileWithStrategy, describeCapabilities, publishFile, walk,
-    type PublishFileOptions, type TransferContents,
-} from '../src/index.js';
+import {ConnectorError, NotFoundError, NotSupportedError, PermissionError, OperationAbortedError, copyFileWithStrategy, describeCapabilities, publishFile, walk, type PublishFileOptions, type TransferContents} from '@jalsoedesign/dockline-abstract';
 
 class ControlledRemote {
     public readonly calls: string[] = [];

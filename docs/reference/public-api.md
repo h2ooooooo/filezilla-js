@@ -1,60 +1,38 @@
 # Public API index
 
-Generic transfer exports now resolve to Dockline. FileZilla retains its reader, metadata models, saved-site factories, registry and FileZilla host-key importer. Both factories add static and instance `toConfig(server, options?)`; see [Dockline integration](/guide/dockline).
+FileZilla exports native settings APIs and settings-to-Dockline integration. Generic transport classes, errors, pools and transfer utilities are imported directly from Dockline. See [the architecture and import migration](/guide/dockline) and the generated [exact TypeScript signatures](/reference/types).
 
-## Core
+## Core: filezilla-core
 
-| Exports | Reference |
+| API | Purpose |
 | --- | --- |
-| `SiteManager`, `getSiteManager`, `getDefaultSiteManager`, `readSiteManagerReport`; `SiteManagerReadOptions`, `SiteImportDiagnostic`, `SiteManagerImportReport` | [Reading and report defaults](/reference/site-manager) |
-| `Server`, `ServerProperties`, `ServerPropertiesExtended` | [Server properties](/reference/server) |
-| `SiteIdentityStore`; `SiteIdentityEndpoint`, `SiteIdentityRecord`, `SiteIdentityData`, `SiteIdentityConflict`, `SiteIdentityReconcileOptions`, `SiteIdentityReconcileResult` | [Stable IDs and explicit persistence](/guide/import-workflows#keep-a-stable-site-selection) |
-| `createMetadataSnapshot`, `parseMetadataSnapshot`, `diffMetadata`, `MetadataSnapshotError`; `MetadataProfile`, `MetadataSite`, `MetadataSnapshot`, `MetadataSnapshotOptions`, `MetadataFieldChange`, `MetadataDiff` | [Immutable metadata](/guide/import-workflows#create-immutable-metadata-snapshots) |
-| `CharsetEncoding`, `LogonType`, `PasvMode`, `ServerFormat`, `ServerProtocol`, `ServerType`; XML and server-tree types | [Enums and XML contracts](/reference/enums) |
+| `SiteManager`, `getSiteManager`, `getDefaultSiteManager`, `getDefaultSiteManagerPath`, `readSiteManagerReport` | Read Site Manager files; select credential loading and tolerant import diagnostics |
+| `Server`, server properties, XML/tree types and enums | FileZilla-native site models and protocol/path interpretation |
+| `SiteIdentityStore` and its record/reconcile types | Stable application-owned selection identity |
+| `createMetadataSnapshot`, `parseMetadataSnapshot`, `diffMetadata`, `MetadataSnapshotError` and metadata types | Redacted immutable snapshots and metadata differences |
+| `FileZillaProfileSource` | Adapt FileZilla sites to Portline profiles and explicit credential resolution |
+| `createFileZillaWriter` | Construct a Portline native writer for explicit FileZilla preview/apply |
 
-Core readers are synchronous and do not connect. Identity/schema data contain no credentials, but can expose connection metadata. Saved XML write-back and identity-store file persistence are application responsibilities.
+Readers are synchronous except where the normalized source contract explicitly permits async operations. Reading does not connect. Legacy models have no save method. Native XML changes use the separate guarded writer; identity JSON persistence remains application-owned.
 
-## Shared connector package
+## FileZilla connector integrations
 
-| Exports | Reference |
+| Package | Exports |
 | --- | --- |
-| `ConnectorFactory<TConnector, TOptions>` | [Factories](/reference/factories) |
-| Shared error classes and `ConnectionStage` | [Complete error reference](/reference/errors) |
-| `ConnectorOperationOptions`, `ResolvedConnectorOperationOptions`, `TransferContents`, `TransferSourceFactory`, `resolveOperationOptions`, `isTransientError` | [Configuration and precedence](/reference/configuration) |
-| `ConnectorProtocol`, `CredentialContext`, `ConnectorCredentials`, `CredentialProvider`, `KeepaliveOptions`, `ConnectionStateEvent`, `ConnectorConnectionOptions` | [Connection options](/reference/configuration#new-optional-controls), [credential variants](/guide/ssh-options#pick-an-authentication-method) |
-| `ConnectorPool`, `PoolConnection`, `PoolOptions`, `ConnectionLease` | [Pool quota and resource lifetime](/guide/connection-pools) |
-| `ConnectorRegistry`, `RegisteredProvider`, `Registration` | [Explicit typed registration](/guide/connection-pools#explicit-connector-registry) |
-| `BandwidthBudget`, `TransferDirection`, `TransferProgressEvent`, `TransferMonitor`, `createTransferMonitor` | [Progress and rate budgets](/guide/advanced-transfers#progress-and-bandwidth), implementation helpers below |
-| `TransferConnector`, `RenameOptions`, `ChecksumDetailsOptions`, `ChecksumResult`, `PublishFileOptions`, `PublicationResult`, `CopyStrategyOptions`, `CopyResult`, `WalkOptions`, `WalkResult` | [Transfer contracts](/guide/advanced-transfers) |
-| `checksumDetails`, `publishFile`, `copyFileWithStrategy`, `walk` | [Transfer tools](/guide/advanced-transfers); standalone helpers take a connector as their first argument |
-| `SupportState`, `Capability`, `ConnectorCapabilities`, `describeCapabilities` | [Capability discovery](/guide/advanced-transfers#capability-discovery) |
+| `filezilla-connector-abstract` | `ConnectorFactory<TConnector, TOptions>`, `ConnectorRegistry`, `RegisteredProvider`, `Registration` |
+| `filezilla-connector-ftp` | `FtpConnectorFactory`, `FtpConnectorFactoryOptions` |
+| `filezilla-connector-sftp` | `SftpConnectorFactory`, `SftpConnectorFactoryOptions`, `FileZillaHostKeyStore` |
 
-### Helpers for connector implementers
+Factories provide static and instance `toConfig(server, options)` and `fromServer(server, options)`. `toConfig` produces a Dockline configuration; `fromServer` creates a disconnected Dockline adapter. The registry dispatches FileZilla's numeric saved protocols to explicitly registered factories. The SFTP host-key importer reads modern FileZilla `hostkeys.xml`; it does not persist approvals.
 
-Most applications use the concrete methods and let their connector manage lifecycle. These exported lower-level helpers do not add session management on their own:
+These entry points do not re-export `FtpConnector`, `SftpConnector`, `KnownHostsStore`, generic transport types or errors. Use [Dockline's API reference](https://h2ooooooo.github.io/dockline/reference/api) for those APIs.
 
-| Helper | Contract |
-| --- | --- |
-| `checkAbort(signal?)` | Throw shared `OperationAbortedError` if already cancelled; does not subscribe to future aborts. |
-| `toReadable(contents)` | Convert the Node/Flystorage read-content forms accepted by the helper into a Node Readable; it does not consume or close the result. |
-| `createTransferMonitor(options, direction, attempt, path?)` | Return `{stream, complete, fail, dispose}`. Pipe bytes through `stream`; call `complete()` only after full protocol success and caller consumption, `fail(error)` on failure, and release listeners with `dispose()`. EOF alone is insufficient confirmation. |
-| `BandwidthBudget.consume(bytes, signal?, direction?)` | Wait for FIFO rate accounting; direction defaults to upload. Share the same instance for an aggregate upload budget and a separate aggregate download budget. |
-| `emitConnectionState(callback, event)` | Send a frozen observation; synchronous callback throws and rejected promises are ignored. |
-| `classifyConnectionError(error, stage)` | Classify an already sanitized transport failure; retain specific existing shared error identities. It is not a raw-error sanitizer. |
-| `describeCapabilities(protocol, features?)` | Produce a frozen versioned report without connecting. Pass advertisements only from the current verified session; omission means inventory was not requested. |
+## CLI: filezilla-cli
 
-An adapter supplied to standalone publication/copy helpers must implement `TransferConnector`, including synchronous `validatePublicationOptions(options)` before mutation, truly exclusive directory creation, nonrecursive empty-directory removal and explicit rename policy. A generic Flystorage adapter without these guarantees is insufficient.
+The package exports `run`, `createFileZillaCliSource`, `checkConnection` and the connection-check option/result/stage/status types. The executable provides search, list, get, source, write-status, write, sync, apply and check. See [complete command inputs](/reference/cli-help), [actual output and exit codes](/reference/cli-output), and the [connection-check contract](/guide/connection-check).
 
-## FTP and SFTP
+Query commands preserve FileZilla-native output shapes and credential-redaction behavior. The shared Portline engine supplies query and guarded writing infrastructure; FileZilla supplies source selection and its network-check extension. The check uses Dockline and performs no remote writes. Write/sync create previews; apply is explicit and repeats the safeguards.
 
-Both export their connector/config, factory/options, `ConnectorOperationOptions` and shared error constructors. Their direct [storage methods](/reference/storage-adapter) include detailed checksum, copy, publication, traversal and capabilities APIs in addition to the base Flystorage adapter methods.
+## Generic connection APIs
 
-FTP additionally exports `FtpUploadSource`, `FtpFilenameEncodingOptions`, `FtpFilenameEncoding`, `ConnectorConnectionOptions`, `CredentialProvider` and `ConnectionStateEvent`. `serverFeatures(options?)` reads FEAT; `serverChecksum(path, algorithm, options)` requires advertised supported hashing. [FTP options](/guide/ftp-options) defines supported encodings, keepalive serialization and protocol guarantees.
-
-SFTP additionally exports `SftpHostKeyChallenge`, `SftpTrustPolicy`, `SftpHostVerifier`, `SftpKeyboardInteractive`, `SftpKeyboardInteractiveChallenge`, `FileZillaHostKeyStore`, `KnownHostsStore`, `KnownHostsConflictError`, `KnownHostsStoreOptions`, `KnownHostEntry`, `KnownHostInspection` and `KnownHostApproval`. [Host trust](/guide/sftp) and [SSH options](/guide/ssh-options) describe authentication and both store APIs. `KeyAuthError` remains a deprecated alias.
-
-## CLI
-
-The executable provides `list`, `get` and `check`. The package root exports `run`, `checkConnection`, `ConnectionCheckOptions`, `ConnectionCheckResult`, `ConnectionCheckStage` and `ConnectionCheckStatus`. [CLI reference](/reference/cli) separates permissive legacy query parsing from strict read-only check flags and its stable JSON/exit contract.
-
-`examples/transfer-recipes.ts` is intentionally packaged source, not an export-map entry or CLI subcommand. Copy it into an application and adapt the typed functions as described in [transfer recipes](/guide/transfer-recipes).
+Use `@jalsoedesign/dockline-core` for scoped transfers and local file helpers, `dockline-ftp-client` or `dockline-sftp-client` for direct adapters, `dockline-ssh-client` for scoped SSH commands/sudo, and `dockline-keys` for key inspection and conversion. FileZilla is needed when the input is FileZilla settings or trusted-key metadata.

@@ -1,8 +1,8 @@
 {
     "name": "@jalsoedesign/filezilla-connector-abstract",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "type": "module",
-    "description": "FileZilla connector factory and registry with shared Dockline compatibility exports",
+    "description": "FileZilla-specific connector factory and numeric protocol registry",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -14,12 +14,12 @@
         "test:watch": "vitest"
     },
     "peerDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0"
+        "@jalsoedesign/filezilla-core": "^1.2.0"
     },
     "devDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0",
+        "@jalsoedesign/filezilla-core": "^1.2.0",
         "typescript": "6.0.3",
-        "vitest": "5.0.0"
+        "vitest": "5.1.0"
     },
     "license": "MIT",
     "engines": {
@@ -27,19 +27,21 @@
     },
     "files": [
         "dist",
-        "LICENSE"
+        "LICENSE",
+        "README.md"
     ],
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
         },
-        "./package.json": "./package.json",
-        "./dist/*": "./dist/*"
+        "./package.json": "./package.json"
     },
     "dependencies": {
         "@flystorage/file-storage": "1.2.2",
-        "@jalsoedesign/dockline-abstract": "^1.0.0"
+        "@jalsoedesign/dockline-abstract": "^1.1.0",
+        "@jalsoedesign/portline-abstract": "^1.0.0",
+        "@jalsoedesign/portline-core": "^1.0.0"
     },
     "repository": {
         "type": "git",

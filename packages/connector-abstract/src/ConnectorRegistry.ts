@@ -1,6 +1,7 @@
+import {ProfileConnectorRegistry} from '@jalsoedesign/portline-core';
 import type {Server, ServerProtocol} from '@jalsoedesign/filezilla-core';
 import type {StorageAdapter} from '@flystorage/file-storage';
-import {UnsupportedProtocolError} from './errors.js';
+import {UnsupportedProtocolError} from '@jalsoedesign/dockline-abstract';
 
 export interface RegisteredProvider<TConnector extends StorageAdapter, TOptions> {
     readonly protocols: readonly ServerProtocol[];
@@ -14,7 +15,12 @@ export interface Registration<TConnector extends StorageAdapter, TOptions> {
 
 /** Explicit providers only. Registration handles preserve provider-specific option and result types. */
 export class ConnectorRegistry {
-    private readonly providers = new Map<ServerProtocol, (server: Server, options: unknown) => StorageAdapter>();
+    private readonly registry = new ProfileConnectorRegistry<Server, ServerProtocol>({
+        protocolFor: server => server.propertiesRaw.protocol,
+        unsupported: (protocol, registered) => new UnsupportedProtocolError(registered ?
+            'The registered provider does not support this site protocol' :
+            `No provider registered for protocol ${protocol}`),
+    }, 'file-transfer');
 
     public register<TConnector extends StorageAdapter, TOptions>(
         provider: RegisteredProvider<TConnector, TOptions>,
@@ -28,41 +34,25 @@ export class ConnectorRegistry {
             if (!Number.isSafeInteger(protocol) || protocol < 0) {
                 throw new TypeError('Protocols must be non-negative integers');
             }
-
-            if (this.providers.has(protocol) && !options.replace) {
-                throw new TypeError(`Protocol ${protocol} already has a registered provider`);
-            }
         }
 
-        const create = (server: Server, supplied: unknown): TConnector => {
-            if (!provider.protocols.includes(server.propertiesRaw.protocol)) {
-                throw new UnsupportedProtocolError('The registered provider does not support this site protocol');
-            }
+        const registration = this.registry.register({
+            protocols: provider.protocols,
+            factory: {
+                fromProfile: (server: Server, supplied?: TOptions) => provider.factory.fromServer(server, supplied),
+            },
+            validateOptions: provider.validateOptions,
+        }, options);
 
-            provider.validateOptions?.(supplied);
-
-            return provider.factory.fromServer(server, supplied as TOptions);
-        };
-
-        for (const protocol of provider.protocols) {
-            this.providers.set(protocol, create);
-        }
-
-        return Object.freeze({fromServer: (server: Server, supplied?: TOptions) => create(server, supplied)});
+        return Object.freeze({fromServer: registration.fromProfile});
     }
 
     /** Runtime dispatch cannot infer transport-specific options; use the typed registration handle where possible. */
     public fromServer(server: Server, options?: unknown): StorageAdapter {
-        const provider = this.providers.get(server.propertiesRaw.protocol);
-
-        if (!provider) {
-            throw new UnsupportedProtocolError(`No provider registered for protocol ${server.propertiesRaw.protocol}`);
-        }
-
-        return provider(server, options);
+        return this.registry.fromProfile(server, options) as StorageAdapter;
     }
 
     public protocols(): readonly ServerProtocol[] {
-        return Object.freeze([...this.providers.keys()].sort((left, right) => left - right));
+        return Object.freeze([...this.registry.protocols()].sort((left, right) => left - right));
     }
 }

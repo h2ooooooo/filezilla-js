@@ -5,8 +5,9 @@ import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {SftpConnectorFactory, type SftpConnector, type SftpConnectorFactoryOptions} from '@jalsoedesign/filezilla-connector-sftp';
-import {AuthError, HostTrustError, NameResolutionError, PermissionError} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnectorFactory, type SftpConnectorFactoryOptions} from '@jalsoedesign/filezilla-connector-sftp';
+import {type SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {AuthError, HostTrustError, NameResolutionError, PermissionError} from '@jalsoedesign/dockline-abstract';
 import {checkConnection} from '../src/commands/check.js';
 import {createLocalSftp} from '../../connector-sftp/tests/local-sftp.js';
 

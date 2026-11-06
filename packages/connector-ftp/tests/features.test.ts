@@ -2,13 +2,10 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
 import {FTPError} from 'basic-ftp';
 import {CharsetEncoding, LogonType, Server, ServerProtocol} from '@jalsoedesign/filezilla-core';
-import {FtpConnector, type FtpConnectorConfig} from '../src/FtpConnector.js';
-import {FtpConnectorFactory} from '../src/FtpConnectorFactory.js';
-import {resolveFilenameEncoding, validateFilename} from '../src/filename-encoding.js';
-import {
-    AuthError, CredentialProviderError, DirectoryAccessError, NameResolutionError,
-    ConnectionRefusedError, TlsTrustError, NotSupportedError, OperationAbortedError, OperationTimeoutError,
-} from '../src/errors.js';
+import {FtpConnector, type FtpConnectorConfig} from '@jalsoedesign/dockline-ftp-client';
+import {FtpConnectorFactory} from '../src/index.js';
+import {resolveFilenameEncoding, validateFilename} from '@jalsoedesign/dockline-ftp-client';
+import {AuthError, CredentialProviderError, DirectoryAccessError, NameResolutionError, ConnectionRefusedError, TlsTrustError, NotSupportedError, OperationAbortedError, OperationTimeoutError} from '@jalsoedesign/dockline-abstract';
 
 const config: FtpConnectorConfig = {
     host: 'fixture.invalid',

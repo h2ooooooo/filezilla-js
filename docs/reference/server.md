@@ -12,7 +12,7 @@ The constructor stores its input without runtime schema validation.
 | --- | --- | --- |
 | `path` | `readonly string` | Canonical selection path; escapes literal percent/slash within names |
 | `propertiesRaw` | `ServerProperties` | Backing object after XML field conversion; remote directory remains encoded |
-| `properties` | `ServerPropertiesExtended` | New shallow object; its remoteDirectory getter decodes only when read |
+| `properties` | `ServerPropertiesExtended` | New shallow object; its `remoteDirectory` getter decodes only when read |
 | `toJSON()` | `Omit<ServerPropertiesExtended, 'password'>` | Password-redacted metadata including path and raw encoded remote directory |
 | `siteProtocolName` | `string` | Deliberate protocol-name mapping: CLOUDFLARE_R2 for 24, UNKNOWN for unrecognized values |
 | `getRemoteDirectory(defaultRemoteDirectory = '')` | `string` | Decode supported FileZilla path, or return default for an absent value |
@@ -34,7 +34,7 @@ The constructor stores its input without runtime schema validation.
 | `logonType` | `LogonType` | Saved authentication mode |
 | `timezoneOffset` | `number` | Metadata; connectors do not apply it |
 | `passiveMode` | `PasvMode` | FTP factory maps active/default/passive |
-| `maximumMultipleConnections` | `number` | Saved limit; pass it explicitly as ConnectorPool serverMaxConnections to enforce it |
+| `maximumMultipleConnections` | `number` | Saved limit; pass it explicitly as `ConnectorPool` `serverMaxConnections` to enforce it |
 | `encodingType` | `CharsetEncoding` | Metadata; connectors do not map this to transport encoding |
 | `customEncoding?` | `string` | Saved custom encoding |
 | `bypassProxy` | `boolean` | Metadata; no proxy configuration is implemented |
@@ -49,4 +49,6 @@ The constructor stores its input without runtime schema validation.
 
 ## Remote directory grammar
 
-The decoder expects a numeric path type, a zero prefix length and length-prefixed segments. `1 0 3 srv 3 app` decodes to `/srv/app`; `1 0` decodes to `/`. Supported type IDs are `0`, `1`, `8` and `9`. Unsupported/malformed inputs throw when the decoded directory is requested, including by spreading the full `properties` view. Host/name reads and built-in redacted JSON do not decode it. See [paths](/guide/paths).
+The decoder expects a numeric [`ServerType`](/reference/enums#servertype), a zero prefix length and length-prefixed segments. `1 0 3 srv 3 app` decodes to `/srv/app`; `1 0` decodes to `/`. Supported type IDs are `0`, `1`, `8` and `9`. The [annotated format example](/guide/how-it-works#decode-filezilla-remote-directories) explains each stored value; the [decoder implementation](https://github.com/h2ooooooo/filezilla-js/blob/main/packages/core/src/Server.ts) contains the corresponding checks.
+
+Unsupported/malformed inputs throw when the decoded directory is requested, including by spreading the full `properties` view. Host/name reads and built-in redacted JSON do not decode it. See [paths](/guide/paths).

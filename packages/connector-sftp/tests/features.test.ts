@@ -6,12 +6,9 @@ import {join} from 'node:path';
 import {Readable} from 'node:stream';
 import ssh2 from 'ssh2';
 import {Server, LogonType, ServerProtocol, CharsetEncoding} from '@jalsoedesign/filezilla-core';
-import {
-    AuthError, CredentialProviderError, NotSupportedError, OperationAbortedError,
-    OperationTimeoutError, type TransferProgressEvent,
-} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector, type SftpConnectorConfig} from '../src/SftpConnector.js';
-import {SftpConnectorFactory} from '../src/SftpConnectorFactory.js';
+import {AuthError, CredentialProviderError, NotSupportedError, OperationAbortedError, OperationTimeoutError, type TransferProgressEvent} from '@jalsoedesign/dockline-abstract';
+import {SftpConnector, type SftpConnectorConfig} from '@jalsoedesign/dockline-sftp-client';
+import {SftpConnectorFactory} from '../src/index.js';
 import {createLocalSftp} from './local-sftp.js';
 
 const close: (() => Promise<void>)[] = [];

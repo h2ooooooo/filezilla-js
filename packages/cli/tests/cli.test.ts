@@ -7,10 +7,14 @@ import * as path from 'path';
 const cliPath = path.join(__dirname, '../src/cli.ts');
 const fixture = (relative: string) => path.join(__dirname, '../../core/fixtures', relative);
 const requireFromCli = createRequire(path.join(__dirname, '../package.json'));
-const runCli = (args: string[], expectedStatus = 0) => {
+const runCli = (args: string[], expectedStatus = 0, forceColor = '0') => {
+    const env: NodeJS.ProcessEnv = {...process.env, FORCE_COLOR: forceColor, npm_config_offline: 'true'};
+
+    delete env.NO_COLOR;
+
     const result = spawnSync(process.execPath, [requireFromCli.resolve('tsx/cli'), cliPath, ...args], {
         encoding: 'utf8',
-        env: {...process.env, FORCE_COLOR: '0', npm_config_offline: 'true'},
+        env,
         timeout: 15000,
         shell: false,
     });
@@ -33,8 +37,76 @@ const runCli = (args: string[], expectedStatus = 0) => {
 
 describe('CLI - filezilla-js', () => {
     const multiFixture = fixture('general/sitemanager.multi.xml');
+    const keyFixture = path.join(__dirname, 'fixtures/key-profiles.xml');
+
+    it('reports the selected settings file and storage backend', () => {
+        const output = runCli(['source', '--file', keyFixture, '--json']);
+
+        expect(JSON.parse(output)).toMatchObject({
+            application: 'FileZilla',
+            location: path.resolve(keyFixture),
+            storage: [{kind: 'file', path: path.resolve(keyFixture), format: 'xml'}],
+        });
+        expect(output).not.toContain('password');
+    });
+
+    describe('private key and remote directory details', () => {
+        it.each([
+            ['search', 'key.example.invalid'],
+            ['list'],
+            ['list', '--table'],
+            ['list', '--full'],
+            ['get', 'Key profile'],
+            ['get', 'Key profile', '--table'],
+        ])('shows the saved key path and decoded remote directory for %j', (...args) => {
+            const output = runCli([...args, '--file', keyFixture]);
+
+            expect(output).toContain('C:\\Users\\demo\\.ssh\\deployment key.ppk');
+            expect(output).toContain('/srv/example');
+        });
+
+        it.each([
+            ['search', 'key.example.invalid'],
+            ['list'],
+            ['list', '--full'],
+            ['get', 'Key profile'],
+        ])('includes key and remote paths in JSON for %j', (...args) => {
+            const result = JSON.parse(runCli([...args, '--file', keyFixture, '--json']));
+            const profile = Array.isArray(result) ? result[0] : result;
+
+            expect(profile).toMatchObject({
+                keyFile: 'C:\\Users\\demo\\.ssh\\deployment key.ppk',
+                remoteDirectory: '/srv/example',
+            });
+        });
+    });
 
     describe('profile search', () => {
+        it('only shows the password hint when a password is hidden', () => {
+            for (const args of [
+                ['search', 'key.example.invalid', '--file', keyFixture],
+                ['search', 'missing.example.invalid', '--file', multiFixture],
+                [
+                    'search',
+                    'test.rebex.net',
+                    '--file',
+                    multiFixture,
+                    '--show-password',
+                ],
+            ]) {
+                const output = runCli(args);
+
+                expect(output).not.toContain('(hidden*)');
+                expect(output).not.toContain('*Enable passwords');
+            }
+        });
+
+        it('highlights the password flag when colors are enabled', () => {
+            const output = runCli(['search', 'test.rebex.net', '--file', multiFixture], 0, '1');
+
+            expect(output).toContain('*Enable passwords with \u001b[32m--show-password\u001b[39m');
+        });
+
         it('searches hosts with the commandless shorthand and shows details for every match', () => {
             const output = runCli(['--search', 'TEST.REBEX.NET', '--file', multiFixture]);
 
@@ -42,7 +114,8 @@ describe('CLI - filezilla-js', () => {
             expect(output.match(/Label/g)).toHaveLength(5);
             expect(output).toContain('Username');
             expect(output).toContain('Password');
-            expect(output).toContain('(hidden)');
+            expect(output).toContain('(hidden*)');
+            expect(output.match(/\*Enable passwords with --show-password/g)).toHaveLength(1);
             expect(output).toContain('/pub/example');
             expect(output).not.toContain('│ password');
         });

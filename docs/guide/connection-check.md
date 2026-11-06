@@ -1,10 +1,9 @@
 # Read-only connection checks
 
-`filezilla-js check` opens a connection using an exact saved site and closes it after the requested checks. It uses the same public connectors and ordinary `connect`, `stat` and `list` operations as application code. There is no separate diagnostic connection API.
+`filezilla-js check` connects to an exact saved site, performs the requested read-only checks and closes the connection. Start with the command below, or use [the complete Node.js example](#use-the-same-check-from-code).
 
 ```sh
-filezilla-js check "Production" --file ./sites.xml --json \
-    --host-key-sha256 "SHA256:independently-verified-public-fingerprint"
+filezilla-js check "Production" --file ./sites.xml --json --host-key-sha256 "SHA256:independently-verified-public-fingerprint"
 ```
 
 The fingerprint above is a placeholder. Supply the complete SHA256 fingerprint independently verified with the server owner; the command does not trust a key merely because the server presents it.
@@ -14,12 +13,145 @@ The fingerprint above is a placeholder. Supply the complete SHA256 fingerprint i
 By default the command connects and authenticates, then disconnects. It does not list directories or transfer files. A connector may perform protocol negotiation or enter the saved initial directory as part of connection setup. Add `--directory` for a directory metadata check, and `--include-listing` for a shallow listing:
 
 ```sh
-filezilla-js check "Production" --file ./sites.xml \
-    --host-key-sha256 "SHA256:independently-verified-public-fingerprint" \
-    --directory /releases --include-listing --max-entries 100
+filezilla-js check "Production" --file ./sites.xml --host-key-sha256 "SHA256:independently-verified-public-fingerprint" --directory /releases --include-listing --max-entries 100
 ```
 
 No write, upload, rename, mkdir or delete operation is part of the command. A read-only check still authenticates and creates server-side access logs. FTP metadata inspection can require a directory listing internally because the protocol does not provide a universal single-file stat operation.
+
+## Use the same check from code
+
+Install `@jalsoedesign/filezilla-core` and `@jalsoedesign/filezilla-cli`. Use the saved SFTP account and verified environment pin from [the connection walkthrough](/guide/quick-start). This program connects, authenticates and closes the connection; it neither lists nor writes files. The output below represents success; failures use the result/exit-code contract above.
+
+Save `check-site.ts` by default, or the filename in the selected language tab. Download: <a href="/examples/check-site.ts" download="check-site.ts">TypeScript</a> · <a href="/examples/check-site.js" download="check-site.js">JavaScript</a> · <a href="/examples/check-site.mjs" download="check-site.mjs">MJS</a> · <a href="/examples/check-site.cjs" download="check-site.cjs">CommonJS</a>
+
+::: code-group
+
+```ts [TypeScript]
+// check-site.ts
+import {checkConnection} from '@jalsoedesign/filezilla-cli';
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site || !fingerprint) {
+    throw new Error('Supply a saved SFTP site and verified SFTP_HOST_FINGERPRINT.');
+}
+
+const result = await checkConnection(site, {hostKeySha256: fingerprint, timeoutMs: 10000});
+
+console.log('Connected:', result.connected);
+console.log('Cleanup:', result.cleanup);
+process.exitCode = result.exitCode;
+```
+
+```js [JavaScript]
+// check-site.js
+import {checkConnection} from '@jalsoedesign/filezilla-cli';
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site || !fingerprint) {
+    throw new Error('Supply a saved SFTP site and verified SFTP_HOST_FINGERPRINT.');
+}
+
+const result = await checkConnection(site, {hostKeySha256: fingerprint, timeoutMs: 10000});
+
+console.log('Connected:', result.connected);
+console.log('Cleanup:', result.cleanup);
+process.exitCode = result.exitCode;
+```
+
+```js [MJS]
+// check-site.mjs
+import {checkConnection} from '@jalsoedesign/filezilla-cli';
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site || !fingerprint) {
+    throw new Error('Supply a saved SFTP site and verified SFTP_HOST_FINGERPRINT.');
+}
+
+const result = await checkConnection(site, {hostKeySha256: fingerprint, timeoutMs: 10000});
+
+console.log('Connected:', result.connected);
+console.log('Cleanup:', result.cleanup);
+process.exitCode = result.exitCode;
+```
+
+```js [CommonJS]
+// check-site.cjs
+const {checkConnection} = require('@jalsoedesign/filezilla-cli');
+const {getSiteManager} = require('@jalsoedesign/filezilla-core');
+
+async function main() {
+    const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+    const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+    const manager = getSiteManager(filename, {credentialPath: selectedPath});
+    const site = manager.getServerByPath(selectedPath);
+
+    if (!site || !fingerprint) {
+        throw new Error('Supply a saved SFTP site and verified SFTP_HOST_FINGERPRINT.');
+    }
+
+    const result = await checkConnection(site, {hostKeySha256: fingerprint, timeoutMs: 10000});
+
+    console.log('Connected:', result.connected);
+    console.log('Cleanup:', result.cleanup);
+    process.exitCode = result.exitCode;
+}
+
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+});
+```
+
+:::
+
+### Run
+
+::: code-group
+
+```sh [TypeScript]
+npm install --save-dev typescript tsx @types/node
+npm pkg set type=module
+npx tsx check-site.ts ./sitemanager.xml Production/Web
+```
+
+```sh [JavaScript]
+npm pkg set type=module
+node check-site.js ./sitemanager.xml Production/Web
+```
+
+```sh [MJS]
+node check-site.mjs ./sitemanager.xml Production/Web
+```
+
+```sh [CommonJS]
+node check-site.cjs ./sitemanager.xml Production/Web
+```
+
+:::
+
+### Output
+
+```text
+Connected: true
+Cleanup: closed
+```
+
+The result uses the same schema and classification as the command. If you need to catch the original typed exceptions in a larger workflow, call the connector's ordinary operations directly instead of using this reporting helper.
 
 ## Options
 
@@ -35,19 +167,23 @@ No write, upload, rename, mkdir or delete operation is part of the command. A re
 | `--timeout-ms <ms>` | `30000` | Overall deadline, including redirected credential input. Must be a positive integer. |
 | `--json` | Off | Emit one versioned JSON result to standard output, including failures. |
 
-Retries and silent reconnect are disabled for this check. The deadline cancels pending operations; the connector is disconnected on success, failure, cancellation and timeout. Cleanup has a separate two-second ceiling so a stuck cleanup operation cannot indefinitely hang the command. `cleanup` reports whether it completed; a failed check retains its original failure status if cleanup also fails.
-
-The listing limit bounds output and application iteration. Current connector directory operations may receive a full shallow directory response internally before yielding entries; the option is not a server-side pagination or memory guarantee.
+See [limits and cleanup](#limits-and-cleanup) for deadline, retry and listing-budget behavior.
 
 ## Credentials and trust
 
 Only the selected site's password is requested from the importer. Other sites remain metadata-only. An explicitly supplied stdin password overrides the saved password; for key authentication it is a passphrase. When stdin is used, saved password contents are not decoded.
 
-Redirect input from your application's secret provider or a protected descriptor. Passwords are **not** accepted through command-line arguments. Input is limited to 64 KiB, decoded as UTF-8, and one final LF or CRLF is removed; other whitespace is preserved. Embedded newlines and NUL bytes are rejected. `--password-stdin` requires redirected input and does not display an interactive terminal prompt. A missing saved credential produces a predictable failure instead of waiting for a prompt.
+Redirect input from the caller's secret provider or a protected descriptor. Passwords are **not** accepted through command-line arguments. Input is limited to 64 KiB, decoded as UTF-8, and one final LF or CRLF is removed; other whitespace is preserved. Embedded newlines and NUL bytes are rejected. `--password-stdin` requires redirected input and does not display an interactive terminal prompt. A missing saved credential produces a predictable failure instead of waiting for a prompt.
 
 Supported saved authentication modes are normal password, ask with a supplied stdin password, FTP anonymous and SFTP key files. Interactive, account, profile and ADC modes are rejected by this command; applications can use the richer connector APIs when those workflows are required. SSH agent and keyboard-interactive CLI flags are not provided.
 
 SFTP requires `requireTrustPolicy: true`, an exact pinned-fingerprint comparison and an acceptance hook that always rejects unknown keys. A missing or mismatched pin cannot send the password to the server. The command never updates a trust store or automatically approves a changed key. Standard TLS certificate verification remains enabled for FTP/FTPS configurations; SSH fingerprint flags are rejected for FTP.
+
+## Limits and cleanup
+
+Retries and silent reconnect are disabled for this check. The deadline cancels pending operations; the connector is disconnected on success, failure, cancellation and timeout. Cleanup has a separate two-second ceiling so a stuck cleanup operation cannot indefinitely hang the command. `cleanup` reports whether it completed; a failed check retains its original failure status if cleanup also fails.
+
+The listing limit bounds output and application iteration. Current connector directory operations may receive a full shallow directory response internally before yielding entries; the option is not a server-side pagination or memory guarantee.
 
 ## JSON and exit codes
 
@@ -86,27 +222,3 @@ A successful check without optional directory work looks like:
 | `130` | `cancelled` | Cancellation, including SIGINT/SIGTERM when delivered by the operating system. |
 
 `stage` preserves a documented typed connector stage when available: `resolve`, `connect`, `trust`, `authenticate`, `credentials` or `directory`. Command-owned stages include `input`, `list`, `cleanup` and `ready`. A stage is context, not a guarantee that every preceding network substep was observed independently. The `cleanup` field is `not-required`, `closed` or `failed`.
-
-## Use the same check from code
-
-```ts
-import {checkConnection} from '@jalsoedesign/filezilla-cli';
-import {getSiteManager} from '@jalsoedesign/filezilla-core';
-
-const manager = getSiteManager('./sites.xml', {
-    credentialPath: 'Production',
-});
-const server = manager.getServerByPath('Production');
-
-if (!server) {
-    throw new Error('The selected site is unavailable.');
-}
-
-const result = await checkConnection(server, {
-    hostKeySha256: independentlyVerifiedFingerprint,
-    timeoutMs: 10000,
-    abortSignal,
-});
-```
-
-The result uses the same schema and classification as the command. If you need to catch the original typed exceptions in a larger workflow, call the connector's ordinary operations directly instead of using this reporting helper.

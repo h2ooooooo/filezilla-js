@@ -4,27 +4,123 @@ These optional workflows are exported from `@jalsoedesign/filezilla-core`. They 
 
 ## Inspect an import
 
-`readSiteManagerReport()` returns a manager, diagnostics and explicit completeness counts. It defaults to strict validation and excludes passwords, including from the returned manager's property APIs.
+`readSiteManagerReport()` reads a file and reports how many sites were accepted or rejected. The example below prints that result and any diagnostics without connecting or loading saved passwords.
 
-```ts
+Use the [quick-start XML fixture](/api/quick-start#save-sitemanager-xml), install `@jalsoedesign/filezilla-core`, and run this complete program. With that valid fixture, no diagnostic lines are printed. Other input can produce diagnostics and different counts.
+
+Save `inspect-import.ts` by default, or the filename in the selected language tab. Download: <a href="/examples/inspect-import.ts" download="inspect-import.ts">TypeScript</a> · <a href="/examples/inspect-import.js" download="inspect-import.js">JavaScript</a> · <a href="/examples/inspect-import.mjs" download="inspect-import.mjs">MJS</a> · <a href="/examples/inspect-import.cjs" download="inspect-import.cjs">CommonJS</a>
+
+::: code-group
+
+```ts [TypeScript]
+// inspect-import.ts
 import {readSiteManagerReport} from '@jalsoedesign/filezilla-core';
 
-const report = readSiteManagerReport('/settings/sitemanager.xml', {
-    mode: 'tolerant',
-});
+const [filename = './sitemanager.xml'] = process.argv.slice(2);
+const report = readSiteManagerReport(filename, {mode: 'tolerant'});
 
 for (const diagnostic of report.diagnostics) {
     console.log(diagnostic.code, diagnostic.sourcePath, diagnostic.field);
 }
 
-console.log({
-    complete: report.complete,
-    accepted: report.acceptedCount,
-    rejected: report.rejectedCount,
-});
-
-const sites = report.manager.getServers();
+console.log('Complete:', report.complete);
+console.log('Accepted:', report.acceptedCount);
+console.log('Rejected:', report.rejectedCount);
 ```
+
+```js [JavaScript]
+// inspect-import.js
+import {readSiteManagerReport} from '@jalsoedesign/filezilla-core';
+
+const [filename = './sitemanager.xml'] = process.argv.slice(2);
+const report = readSiteManagerReport(filename, {mode: 'tolerant'});
+
+for (const diagnostic of report.diagnostics) {
+    console.log(diagnostic.code, diagnostic.sourcePath, diagnostic.field);
+}
+
+console.log('Complete:', report.complete);
+console.log('Accepted:', report.acceptedCount);
+console.log('Rejected:', report.rejectedCount);
+```
+
+```js [MJS]
+// inspect-import.mjs
+import {readSiteManagerReport} from '@jalsoedesign/filezilla-core';
+
+const [filename = './sitemanager.xml'] = process.argv.slice(2);
+const report = readSiteManagerReport(filename, {mode: 'tolerant'});
+
+for (const diagnostic of report.diagnostics) {
+    console.log(diagnostic.code, diagnostic.sourcePath, diagnostic.field);
+}
+
+console.log('Complete:', report.complete);
+console.log('Accepted:', report.acceptedCount);
+console.log('Rejected:', report.rejectedCount);
+```
+
+```js [CommonJS]
+// inspect-import.cjs
+const {readSiteManagerReport} = require('@jalsoedesign/filezilla-core');
+
+async function main() {
+    const [filename = './sitemanager.xml'] = process.argv.slice(2);
+    const report = readSiteManagerReport(filename, {mode: 'tolerant'});
+
+    for (const diagnostic of report.diagnostics) {
+        console.log(diagnostic.code, diagnostic.sourcePath, diagnostic.field);
+    }
+
+    console.log('Complete:', report.complete);
+    console.log('Accepted:', report.acceptedCount);
+    console.log('Rejected:', report.rejectedCount);
+}
+
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+});
+```
+
+:::
+
+### Run
+
+::: code-group
+
+```sh [TypeScript]
+npm install --save-dev typescript tsx @types/node
+npm pkg set type=module
+npx tsx inspect-import.ts ./sitemanager.xml
+```
+
+```sh [JavaScript]
+npm pkg set type=module
+node inspect-import.js ./sitemanager.xml
+```
+
+```sh [MJS]
+node inspect-import.mjs ./sitemanager.xml
+```
+
+```sh [CommonJS]
+node inspect-import.cjs ./sitemanager.xml
+```
+
+:::
+
+### Output
+
+```text
+Complete: true
+Accepted: 1
+Rejected: 0
+```
+
+## Import validation and diagnostics
+
+These settings control how records inside the XML are checked. The example above selects tolerant mode so an invalid record can be reported while valid records remain available. The default is strict validation. Saved passwords remain excluded unless explicitly requested.
 
 | Option | Default | Behavior |
 | --- | --- | --- |
@@ -54,9 +150,13 @@ Metadata-only imports intentionally do not decode or validate an unrequested pas
 
 ## Keep a stable site selection
 
+The following are contextual recipes, not separate programs. Keep the reader setup above, define `const manager = report.manager`, and supply a persisted identity store, `savedSiteId`, `savedCanonicalPath` and snapshot text where used. Import declarations belong at file scope. IDs and diagnostics depend on the input; the snippets do not promise fixed output.
+
 `SiteIdentityStore` assigns random application-facing IDs. Its matching data contains a canonical path, normalized host, port, protocol and username; it contains no passwords, key files, private key contents or credential-derived hashes. An explicit `sourceId` separates independently owned imports.
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 import {readSiteManagerReport, SiteIdentityStore} from '@jalsoedesign/filezilla-core';
 
 const {manager} = readSiteManagerReport('/settings/sitemanager.xml');
@@ -73,6 +173,59 @@ if (!result.committed) {
 }
 ```
 
+```js [JavaScript]
+import {readSiteManagerReport, SiteIdentityStore} from '@jalsoedesign/filezilla-core';
+
+const {manager} = readSiteManagerReport('/settings/sitemanager.xml');
+const identities = new SiteIdentityStore();
+const result = identities.reconcile(manager, {sourceId: 'work-sites'});
+
+if (!result.committed) {
+    console.log(result.conflicts);
+} else {
+    const selectedId = result.sites[0]?.id;
+    const dataToPersist = identities.toJSON();
+
+    console.log(selectedId, dataToPersist.schemaVersion);
+}
+```
+
+```js [MJS]
+import {readSiteManagerReport, SiteIdentityStore} from '@jalsoedesign/filezilla-core';
+
+const {manager} = readSiteManagerReport('/settings/sitemanager.xml');
+const identities = new SiteIdentityStore();
+const result = identities.reconcile(manager, {sourceId: 'work-sites'});
+
+if (!result.committed) {
+    console.log(result.conflicts);
+} else {
+    const selectedId = result.sites[0]?.id;
+    const dataToPersist = identities.toJSON();
+
+    console.log(selectedId, dataToPersist.schemaVersion);
+}
+```
+
+```js [CommonJS]
+const {readSiteManagerReport, SiteIdentityStore} = require('@jalsoedesign/filezilla-core');
+
+const {manager} = readSiteManagerReport('/settings/sitemanager.xml');
+const identities = new SiteIdentityStore();
+const result = identities.reconcile(manager, {sourceId: 'work-sites'});
+
+if (!result.committed) {
+    console.log(result.conflicts);
+} else {
+    const selectedId = result.sites[0]?.id;
+    const dataToPersist = identities.toJSON();
+
+    console.log(selectedId, dataToPersist.schemaVersion);
+}
+```
+
+:::
+
 ### Reconciliation rules
 
 1. An explicit reviewed resolution takes precedence. Set a path to an existing ID from the same source, or to `null` to create a new ID.
@@ -85,7 +238,9 @@ Host matching is case insensitive and trims surrounding whitespace. Usernames ar
 
 Conflicts leave the entire stored mapping unchanged. `sites` contains the conflict-free **proposal**, including provisional IDs for newly encountered sites; do not persist selections from that proposal until `committed` is true. Supply decisions for every conflict and rerun reconciliation:
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 const resolved = identities.reconcile(manager, {
     sourceId: 'work-sites',
     resolutions: {
@@ -99,11 +254,57 @@ if (!resolved.committed) {
 }
 ```
 
+```js [JavaScript]
+const resolved = identities.reconcile(manager, {
+    sourceId: 'work-sites',
+    resolutions: {
+        'Moved/Production': savedSiteId,
+        'Moved/Production clone': null,
+    },
+});
+
+if (!resolved.committed) {
+    throw new Error('Some identity decisions are still unresolved.');
+}
+```
+
+```js [MJS]
+const resolved = identities.reconcile(manager, {
+    sourceId: 'work-sites',
+    resolutions: {
+        'Moved/Production': savedSiteId,
+        'Moved/Production clone': null,
+    },
+});
+
+if (!resolved.committed) {
+    throw new Error('Some identity decisions are still unresolved.');
+}
+```
+
+```js [CommonJS]
+const resolved = identities.reconcile(manager, {
+    sourceId: 'work-sites',
+    resolutions: {
+        'Moved/Production': savedSiteId,
+        'Moved/Production clone': null,
+    },
+});
+
+if (!resolved.committed) {
+    throw new Error('Some identity decisions are still unresolved.');
+}
+```
+
+:::
+
 `sourceSiteIds` and `resolutions` are maps keyed by current canonical paths. Unknown paths, unknown resolution IDs and duplicate source site IDs are configuration errors. Assigning one stored ID to multiple current paths returns conflicts. Incomplete tolerant imports cannot be reconciled, so a rejected record cannot accidentally be treated as a removed site.
 
 ### Resolve and migrate saved selections
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 const selected = identities.resolve(manager, {
     sourceId: 'work-sites',
     id: savedSiteId,
@@ -115,13 +316,51 @@ const migratedId = identities.migratePath(manager, {
 });
 ```
 
+```js [JavaScript]
+const selected = identities.resolve(manager, {
+    sourceId: 'work-sites',
+    id: savedSiteId,
+});
+
+const migratedId = identities.migratePath(manager, {
+    sourceId: 'work-sites',
+    path: savedCanonicalPath,
+});
+```
+
+```js [MJS]
+const selected = identities.resolve(manager, {
+    sourceId: 'work-sites',
+    id: savedSiteId,
+});
+
+const migratedId = identities.migratePath(manager, {
+    sourceId: 'work-sites',
+    path: savedCanonicalPath,
+});
+```
+
+```js [CommonJS]
+const selected = identities.resolve(manager, {
+    sourceId: 'work-sites',
+    id: savedSiteId,
+});
+
+const migratedId = identities.migratePath(manager, {
+    sourceId: 'work-sites',
+    path: savedCanonicalPath,
+});
+```
+
+:::
+
 Both methods return `null` when the selection does not uniquely identify the current site with the stored endpoint. Neither falls back to a similar name or hostname. Reconcile first when a site has moved. `migratePath()` supports upgrading an application's saved canonical-path selections after a successful reconciliation; it cannot infer which old path belonged to a renamed record if the application has no prior identity mapping.
 
 To load the selected password, re-read the source with `includePasswords: true` and `credentialPath: selected.path`, then call `resolve()` again against the freshly imported manager. Handle `null` if its path or endpoint changed between reads. Stable IDs do not replace current import uniqueness checks or server trust checks.
 
 ### Persistence and ownership
 
-Use `identities.toJSON()` and `SiteIdentityStore.fromJSON(parsedJson)` with your application's storage. Schema version 1 is validated; unknown versions, duplicate IDs/paths/source IDs and unexpected fields are rejected without echoing their contents. Returned records are deeply frozen. This package does not provide `SiteIdentityStore.open()` or silently write a shared file.
+Use `identities.toJSON()` and `SiteIdentityStore.fromJSON(parsedJson)` with the caller's storage. Schema version 1 is validated; unknown versions, duplicate IDs/paths/source IDs and unexpected fields are rejected without echoing their contents. Returned records are deeply frozen. This package does not provide `SiteIdentityStore.open()` or silently write a shared file.
 
 Serialize read/reconcile/write in an application transaction or under a lock. For a shared database or multiple processes, use a revision check and retry against the current record. Atomic file replacement alone prevents torn files but does not prevent a stale writer from losing another process's changes. Keep the source mapping and its saved selections under the same ownership. The library does not merge competing mappings or migrate unknown future schema versions automatically.
 
@@ -129,7 +368,9 @@ Identity mappings still expose hosts, paths and usernames. Supply non-secret sou
 
 ## Create immutable metadata snapshots
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 import {createMetadataSnapshot, diffMetadata, parseMetadataSnapshot} from '@jalsoedesign/filezilla-core';
 
 const current = createMetadataSnapshot(manager, {schemaVersion: 1});
@@ -138,6 +379,38 @@ const changes = diffMetadata(previous, current);
 
 console.log(changes.added, changes.removed, changes.changed);
 ```
+
+```js [JavaScript]
+import {createMetadataSnapshot, diffMetadata, parseMetadataSnapshot} from '@jalsoedesign/filezilla-core';
+
+const current = createMetadataSnapshot(manager, {schemaVersion: 1});
+const previous = parseMetadataSnapshot(JSON.parse(savedSnapshotJson));
+const changes = diffMetadata(previous, current);
+
+console.log(changes.added, changes.removed, changes.changed);
+```
+
+```js [MJS]
+import {createMetadataSnapshot, diffMetadata, parseMetadataSnapshot} from '@jalsoedesign/filezilla-core';
+
+const current = createMetadataSnapshot(manager, {schemaVersion: 1});
+const previous = parseMetadataSnapshot(JSON.parse(savedSnapshotJson));
+const changes = diffMetadata(previous, current);
+
+console.log(changes.added, changes.removed, changes.changed);
+```
+
+```js [CommonJS]
+const {createMetadataSnapshot, diffMetadata, parseMetadataSnapshot} = require('@jalsoedesign/filezilla-core');
+
+const current = createMetadataSnapshot(manager, {schemaVersion: 1});
+const previous = parseMetadataSnapshot(JSON.parse(savedSnapshotJson));
+const changes = diffMetadata(previous, current);
+
+console.log(changes.added, changes.removed, changes.changed);
+```
+
+:::
 
 Snapshots include allowlisted connection settings, canonical paths, names and remote-directory metadata. They omit passwords and password encoding entirely and compute no credential-derived comparison material. Three sensitive metadata categories are opt-in: `includeUsernames`, `includeLocalPaths` (key-file and local-directory paths) and `includeComments`. All default to false.
 
@@ -149,12 +422,37 @@ Snapshots sort sites deterministically and are deeply frozen. `parseMetadataSnap
 
 The default identity mode is `canonical-path`. A move appears as one removal and one addition because the snapshot does not guess identity. For precise rename diffs, reconcile the identity store and supply it when creating **both** snapshots:
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 const current = createMetadataSnapshot(manager, {
     identityStore: identities,
     sourceId: 'work-sites',
 });
 ```
+
+```js [JavaScript]
+const current = createMetadataSnapshot(manager, {
+    identityStore: identities,
+    sourceId: 'work-sites',
+});
+```
+
+```js [MJS]
+const current = createMetadataSnapshot(manager, {
+    identityStore: identities,
+    sourceId: 'work-sites',
+});
+```
+
+```js [CommonJS]
+const current = createMetadataSnapshot(manager, {
+    identityStore: identities,
+    sourceId: 'work-sites',
+});
+```
+
+:::
 
 Every site must resolve to its current stored identity. A rename then produces changes to `path` and `name` under the same `key`. The snapshot contains the ID and the chosen metadata profile, not the identity store's endpoint/account matching data.
 

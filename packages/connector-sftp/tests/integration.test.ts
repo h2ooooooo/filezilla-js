@@ -5,10 +5,11 @@ import {mkdtemp, writeFile, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {ConnectorFactory, AuthError, HostTrustError, NotFoundError, PermissionError, NotSupportedError, OperationAbortedError} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector, type SftpConnectorConfig} from '../src/SftpConnector.js';
-import {SftpConnectorFactory} from '../src/SftpConnectorFactory.js';
-import {FileZillaHostKeyStore} from '../src/FileZillaHostKeyStore.js';
+import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {AuthError, HostTrustError, NotFoundError, PermissionError, NotSupportedError, OperationAbortedError} from '@jalsoedesign/dockline-abstract';
+import {SftpConnector, type SftpConnectorConfig} from '@jalsoedesign/dockline-sftp-client';
+import {SftpConnectorFactory} from '../src/index.js';
+import {FileZillaHostKeyStore} from '../src/index.js';
 import {createLocalSftp} from './local-sftp.js';
 
 let endpoint: Awaited<ReturnType<typeof createLocalSftp>>;

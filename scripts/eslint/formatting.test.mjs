@@ -39,7 +39,7 @@ function syntax(source) {
 }
 
 test('the approved example stays unchanged on repeated formatting', async () => {
-    const source = await readFile(new URL('../../packages/connector-abstract/src/operation-options.ts', import.meta.url), 'utf8');
+    const source = await readFile(new URL('./fixtures/operation-options.ts.txt', import.meta.url), 'utf8');
     const {result, output} = await format(source);
 
     assert.deepEqual(result.messages, []);

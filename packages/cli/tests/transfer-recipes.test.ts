@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 import {Server, LogonType, ServerProtocol} from '@jalsoedesign/filezilla-core';
-import {IntegrityError} from '@jalsoedesign/filezilla-connector-abstract';
+import {IntegrityError} from '@jalsoedesign/dockline-abstract';
 import {
     createPinnedSftp,
     downloadToNewFile,

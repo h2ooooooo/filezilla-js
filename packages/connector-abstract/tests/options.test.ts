@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {AuthError, ConnectorError, HostTrustError, isTransientError, NotFoundError, OperationAbortedError, OperationTimeoutError, PermissionError, resolveOperationOptions} from '../src/index.js';
+import {AuthError, ConnectorError, HostTrustError, isTransientError, NotFoundError, OperationAbortedError, OperationTimeoutError, PermissionError, resolveOperationOptions} from '@jalsoedesign/dockline-abstract';
 
 describe('shared retry and timeout policy', () => {
     test('defaults to three additional attempts with reconnect opt-in', () => {

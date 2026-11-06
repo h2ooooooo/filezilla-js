@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {existsSync, readFileSync} from 'node:fs';
+import {existsSync, readFileSync, readdirSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import path from 'node:path';
@@ -27,13 +27,21 @@ if (result.status !== 0) {
 
 const packageResult = JSON.parse(result.stdout);
 const packages = Array.isArray(packageResult) ? packageResult : Object.values(packageResult);
+const workspacePackages = new Map(readdirSync(path.join(repository, 'packages')).map(directory => {
+    const packageDirectory = path.join(repository, 'packages', directory);
+    const manifest = JSON.parse(readFileSync(path.join(packageDirectory, 'package.json'), 'utf8'));
 
-assert.equal(packages.length, 5, 'All five packages must be inspected');
+    return [manifest.name, {directory, packageDirectory, manifest}];
+}));
+
+assert.equal(packages.length, workspacePackages.size, 'All workspace packages must be inspected');
 
 for (const packed of packages) {
-    const packageName = packed.name.replace('@jalsoedesign/filezilla-', '');
-    const packageDirectory = path.join(repository, 'packages', packageName);
-    const manifest = JSON.parse(readFileSync(path.join(packageDirectory, 'package.json'), 'utf8'));
+    const workspace = workspacePackages.get(packed.name);
+
+    assert.ok(workspace, `${packed.name}: unknown workspace`);
+
+    const {directory: packageName, packageDirectory, manifest} = workspace;
     const files = packed.files.map((file) => file.path);
 
     for (const required of [
@@ -53,7 +61,9 @@ for (const packed of packages) {
     }[packageName];
     const docklineDependencies = Object.keys(manifest.dependencies ?? {}).filter(name => name.startsWith('@jalsoedesign/dockline-'));
 
-    assert.deepEqual(docklineDependencies, expectedDocklineDependency ? [expectedDocklineDependency] : []);
+    const expectedDocklineDependencies = expectedDocklineDependency ? [...new Set(['@jalsoedesign/dockline-abstract', expectedDocklineDependency])] : packageName === 'cli' ? ['@jalsoedesign/dockline-abstract'] : [];
+
+    assert.deepEqual(docklineDependencies.sort(), expectedDocklineDependencies.sort());
 
     for (const version of Object.values(manifest.dependencies ?? {})) {
         assert.equal(version.startsWith('file:'), false, `${packed.name}: published dependencies must be portable`);

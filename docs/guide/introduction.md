@@ -1,17 +1,21 @@
 # Introduction
 
-FileZilla TS lets you use your saved FileZilla connections from JavaScript, TypeScript or the terminal. Search profiles by name, host or username, look up connection details, and read local and remote directory settings.
+FileZilla JS reads saved Site Manager entries from Node.js or the terminal. Select and search sites, read connection metadata, map saved settings into Dockline, or preview supported profile changes.
 
-To find a saved profile from the terminal:
+## Start with the API
 
-```sh
-filezilla-js --search example.com --show-password
-```
+[Install `filezilla-core`](/guide/installation), then [read a synthetic saved site](/api/quick-start). The first example opens no connection and needs no FileZilla installation. Once that works, [select/search sites](/guide/querying) or [connect a saved site](/guide/quick-start).
 
-The CLI finds your FileZilla configuration automatically and displays a table for each match. See [installation](/guide/installation) to install the CLI or library.
+## Start with the CLI
 
-The core library reads Site Manager XML and preserves its folder structure. For uploads and downloads, the FTP and SFTP packages connect saved sites through [Dockline](https://h2ooooooo.github.io/dockline/).
+Follow [the CLI quick start](/cli/quick-start) to install `filezilla-js`, save a fixture and run a query. [Query transcripts](/cli/queries) show real coloured output and JSON; passwords remain hidden by default.
 
-Start with [installation](/guide/installation), the [quick start](/guide/quick-start), [FTP](/guide/ftp), [SFTP](/guide/sftp) or the [CLI](/reference/cli). The [specification](/reference/specification) describes behavior and limitations.
+## Choose a source
 
-FileZilla TS is an independent project and is not affiliated with or endorsed by FileZilla.
+Use an explicit XML filename for predictable selection. Automatic discovery checks [standard locations](/guide/site-manager#automatic-location); it does not identify every launcher override or the active FileZilla version.
+
+## Explore further
+
+[API documentation](/api/) and [CLI documentation](/cli/) organize common tasks. [Writing and sync](/api/writing) explains the separate preview/apply workflow. [Architecture](/guide/dockline) explains the FileZilla, Portline and Dockline responsibilities; [reference](/reference/public-api) lists public APIs.
+
+FileZilla JS is an independent project and is not affiliated with or endorsed by FileZilla.

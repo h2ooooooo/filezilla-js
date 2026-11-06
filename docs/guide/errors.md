@@ -1,14 +1,15 @@
 # Errors and reconnecting
 
-The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+Error-handling snippets are contextual recipes around an already selected connector. Supply its setup, requested operation and reporting callbacks; they are not standalone programs. Generic error classes come directly from Dockline. Use [the saved-site walkthrough](/guide/quick-start) for complete connection setup.
 
-The abstract package now owns one runtime error hierarchy. Both connectors re-export those same constructors, so compatible installed package instances support shared `instanceof` checks.
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
-```ts
-import {
-    AuthError, HostTrustError, PermissionError,
-    OperationAbortedError, OperationTimeoutError,
-} from '@jalsoedesign/filezilla-connector-abstract';
+Dockline abstract owns the transport error hierarchy. Its protocol clients re-export the relevant constructors, so compatible installed package instances support shared `instanceof` checks.
+
+::: code-group
+
+```ts [TypeScript]
+import {AuthError, HostTrustError, PermissionError, OperationAbortedError, OperationTimeoutError} from '@jalsoedesign/dockline-abstract';
 
 try {
     await connector.connect({timeoutMs: 10_000});
@@ -28,6 +29,74 @@ try {
     }
 }
 ```
+
+```js [JavaScript]
+import {AuthError, HostTrustError, PermissionError, OperationAbortedError, OperationTimeoutError} from '@jalsoedesign/dockline-abstract';
+
+try {
+    await connector.connect({timeoutMs: 10_000});
+} catch (error) {
+    if (error instanceof HostTrustError) {
+        throw new Error('Review the remote host identity before reconnecting.');
+    } else if (error instanceof AuthError) {
+        throw new Error('The server rejected authentication.');
+    } else if (error instanceof PermissionError) {
+        throw new Error('This account lacks the required permission.');
+    } else if (error instanceof OperationAbortedError) {
+        console.log('Cancelled.');
+    } else if (error instanceof OperationTimeoutError) {
+        console.log('The attempt timed out.');
+    } else {
+        throw error;
+    }
+}
+```
+
+```js [MJS]
+import {AuthError, HostTrustError, PermissionError, OperationAbortedError, OperationTimeoutError} from '@jalsoedesign/dockline-abstract';
+
+try {
+    await connector.connect({timeoutMs: 10_000});
+} catch (error) {
+    if (error instanceof HostTrustError) {
+        throw new Error('Review the remote host identity before reconnecting.');
+    } else if (error instanceof AuthError) {
+        throw new Error('The server rejected authentication.');
+    } else if (error instanceof PermissionError) {
+        throw new Error('This account lacks the required permission.');
+    } else if (error instanceof OperationAbortedError) {
+        console.log('Cancelled.');
+    } else if (error instanceof OperationTimeoutError) {
+        console.log('The attempt timed out.');
+    } else {
+        throw error;
+    }
+}
+```
+
+```js [CommonJS]
+const {AuthError, HostTrustError, PermissionError, OperationAbortedError, OperationTimeoutError} = require('@jalsoedesign/dockline-abstract');
+
+try {
+    await connector.connect({timeoutMs: 10_000});
+} catch (error) {
+    if (error instanceof HostTrustError) {
+        throw new Error('Review the remote host identity before reconnecting.');
+    } else if (error instanceof AuthError) {
+        throw new Error('The server rejected authentication.');
+    } else if (error instanceof PermissionError) {
+        throw new Error('This account lacks the required permission.');
+    } else if (error instanceof OperationAbortedError) {
+        console.log('Cancelled.');
+    } else if (error instanceof OperationTimeoutError) {
+        console.log('The attempt timed out.');
+    } else {
+        throw error;
+    }
+}
+```
+
+:::
 
 `ConnectorError` is the base. Other shared classes include `NotFoundError`, `NotSupportedError`, `UnsupportedProtocolError` and `ConnectionClosedError`. SFTP's legacy `KeyAuthError` export is a deprecated alias of `AuthError`, not a separate identity. Multiple incompatible installed copies of the shared package can still create ordinary JavaScript class-identity problems.
 
@@ -50,7 +119,6 @@ A read already returned to a caller is not automatically replayed. One-shot uplo
 ## Redaction and wrappers
 
 Transport wrappers redact occurrences of configured passwords/passphrases from ordinary underlying messages and avoid retaining raw causes. This is limited redaction, not a general sanitizer for application logs, host names, paths or configuration objects.
-
 
 ## Distinguishing connection failures in the normal flow
 

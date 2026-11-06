@@ -4,13 +4,8 @@ import {pipeline} from 'node:stream/promises';
 import {createHash} from 'node:crypto';
 import {posix} from 'node:path';
 import type {StatEntry} from '@flystorage/file-storage';
-import {
-    BandwidthBudget, ConnectorPool, ConnectorRegistry, createTransferMonitor, describeCapabilities,
-    checksumDetails, copyFileWithStrategy, publishFile, walk, classifyConnectionError, emitConnectionState,
-    IntegrityError, ResourceLimitError, NotSupportedError, NotFoundError, OperationAbortedError,
-    OperationTimeoutError, PoolClosedError, NameResolutionError, AuthError,
-    type TransferContents, type RenameOptions,
-} from '../src/index.js';
+import {BandwidthBudget, ConnectorPool, createTransferMonitor, describeCapabilities, checksumDetails, copyFileWithStrategy, publishFile, walk, classifyConnectionError, emitConnectionState, IntegrityError, ResourceLimitError, NotSupportedError, NotFoundError, OperationAbortedError, OperationTimeoutError, PoolClosedError, NameResolutionError, AuthError, type TransferContents, type RenameOptions} from '@jalsoedesign/dockline-abstract';
+import {ConnectorRegistry} from '../src/index.js';
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5));
 const consume = async (stream: Readable): Promise<Buffer> => {

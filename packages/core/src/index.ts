@@ -1,4 +1,5 @@
 export * from './SiteManager';
+export * from './FileZillaProfileSource';
 export * from './Server';
 export * from './SiteIdentityStore';
 export * from './MetadataSnapshot';
@@ -10,3 +11,5 @@ export * from './enum/ServerProtocol';
 export * from './enum/ServerType';
 export * from './types/XmlConfigTypes';
 export * from './types/ServerTreeTypes';
+
+export * from './writing';

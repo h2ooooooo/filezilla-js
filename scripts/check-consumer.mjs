@@ -3,6 +3,7 @@ import {spawn} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {argument, artifactPackages} from './package-artifacts.mjs';
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const staging = await mkdtemp(path.join(tmpdir(), 'filezilla consumer evidence '));
@@ -21,10 +22,12 @@ const results = [];
 
 async function command(label, executable, args, cwd) {
     let output = '';
+    let stdout = '';
     const child = spawn(executable, args, {cwd, windowsHide: true});
 
     child.stdout.on('data', (chunk) => {
         output += chunk;
+        stdout += chunk;
     });
     child.stderr.on('data', (chunk) => {
         output += chunk;
@@ -50,7 +53,7 @@ async function command(label, executable, args, cwd) {
 
     console.log(`${label}: PASS`);
 
-    return output;
+    return stdout;
 }
 
 const packedOutput = await command('pack', process.execPath, [
@@ -65,11 +68,22 @@ const packedOutput = await command('pack', process.execPath, [
 const packResult = JSON.parse(packedOutput);
 const packed = Array.isArray(packResult) ? packResult : Object.values(packResult);
 
+if (process.argv.includes('--artifacts')) {
+    for (const item of await artifactPackages(argument('--artifacts'))) {
+        if (packed.some(candidate => candidate.name === item.name)) {
+            continue;
+        }
+
+        await copyFile(item.file, path.join(artifacts, item.filename));
+        packed.push(item);
+    }
+}
+
 await writeFile(path.join(staging, 'pack-after.json'), JSON.stringify(packed, null, 2));
 
 const dependencies = {
+    '@jalsoedesign/dockline-core': '^1.1.0',
     ...Object.fromEntries(packed.map((item) => [item.name, `file:${path.join(artifacts, item.filename).split(path.sep).join('/')}`])),
-    '@jalsoedesign/dockline-core': '^1.0.0',
 };
 
 await writeFile(path.join(directory, 'package.json'), JSON.stringify({
@@ -90,13 +104,20 @@ await writeFile(path.join(directory, 'tsconfig.json'), JSON.stringify({
         noEmit: true,
         types: ['node'],
     },
-    include: ['consumer.ts', 'transfer-recipes.ts', 'features.ts', 'quick-start-*.ts'],
+    include: ['consumer.ts', 'transfer-recipes.ts', 'features.ts', 'documented-*.ts'],
 }, null, 2));
 await writeFile(path.join(directory, 'consumer.ts'), `import {Readable} from 'node:stream';
 import {Server, SiteManager} from '@jalsoedesign/filezilla-core';
-import {ConnectorFactory, AuthError, type ConnectorOperationOptions} from '@jalsoedesign/filezilla-connector-abstract';
-import {FtpConnector, FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
-import {SftpConnector, SftpConnectorFactory, FileZillaHostKeyStore, type SftpHostKeyChallenge} from '@jalsoedesign/filezilla-connector-sftp';
+import {ProfileConnectorFactory} from '@jalsoedesign/portline-abstract';
+import {CredentialResolver, ProfileCatalog} from '@jalsoedesign/portline-core';
+import {createProfileCli} from '@jalsoedesign/portline-cli';
+import {createFileZillaCliSource} from '@jalsoedesign/filezilla-cli';
+import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {AuthError, type ConnectorOperationOptions} from '@jalsoedesign/dockline-abstract';
+import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
+import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
+import {SftpConnector, type SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
+import {SftpConnectorFactory, FileZillaHostKeyStore} from '@jalsoedesign/filezilla-connector-sftp';
 import {FileStorage} from '@flystorage/file-storage';
 import {Dockline, type TransferConfig} from '@jalsoedesign/dockline-core';
 const settings: ConnectorOperationOptions = {autoReconnect: true, maxTransientRetries: 3};
@@ -104,6 +125,8 @@ const sftp = new SftpConnector({host: 'localhost', port: 22, username: 'fixture'
 const ftp = new FtpConnector({host: 'localhost', port: 21, user: 'fixture', password: '', secure: false, passive: true, initialPath: '', ...settings});
 const ftpFactory: ConnectorFactory<FtpConnector> = new FtpConnectorFactory();
 const sftpFactory: ConnectorFactory<SftpConnector> = new SftpConnectorFactory();
+const sharedFactory: ProfileConnectorFactory<Server, SftpConnector> = sftpFactory;
+const sharedCli = createProfileCli({name: 'consumer-js', loadSource: () => createFileZillaCliSource(new SiteManager({FileZilla3: {Servers: {}}}))});
 const storage = new FileStorage(sftp);
 const upload = () => sftp.write('fixture.txt', () => Readable.from('fixture'), settings);
 const savedConfig = (server: Server): TransferConfig => SftpConnectorFactory.toConfig(server, {requireTrustPolicy: true, hasTrustPolicy: () => false, acceptTrustPolicy: () => false});
@@ -111,42 +134,56 @@ const transfer = (config: TransferConfig) => Dockline.withConnection(config, asy
     await remote.uploadFile('./fixture.txt', 'fixture.txt');
     await remote.downloadFile('fixture.txt', './download.txt');
 });
-void [Server, SiteManager, AuthError, ftp, ftpFactory, sftpFactory, storage, upload, savedConfig, transfer, FileZillaHostKeyStore.fromFile];
+void [Server, SiteManager, AuthError, ftp, ftpFactory, sftpFactory, storage, upload, savedConfig, transfer, FileZillaHostKeyStore.fromFile,
+    sharedFactory, sharedCli, CredentialResolver, ProfileCatalog];
 `);
 await writeFile(path.join(directory, 'runtime.mjs'), `import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
-import {AuthError, ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
-import {AuthError as FtpAuthError, FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
-import {AuthError as SftpAuthError, SftpConnectorFactory, SftpConnector as FileZillaSftp} from '@jalsoedesign/filezilla-connector-sftp';
-import {FtpConnector as FileZillaFtp} from '@jalsoedesign/filezilla-connector-ftp';
+import {AuthError} from '@jalsoedesign/dockline-abstract';
+import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
 import {AuthError as DocklineAuthError} from '@jalsoedesign/dockline-abstract';
 import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
 import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {ProfileConnectorFactory} from '@jalsoedesign/portline-abstract';
+import {CredentialResolver} from '@jalsoedesign/portline-core';
 assert.equal(typeof require('@jalsoedesign/filezilla-core').SiteManager, 'function');
 assert.equal(AuthError, DocklineAuthError);
-assert.equal(FtpConnector, FileZillaFtp);
-assert.equal(SftpConnector, FileZillaSftp);
-assert.equal(FtpAuthError, AuthError);
-assert.equal(SftpAuthError, AuthError);
+assert.deepEqual(Object.keys(await import('@jalsoedesign/filezilla-connector-abstract')).sort(), ['ConnectorFactory', 'ConnectorRegistry']);
+assert.deepEqual(Object.keys(await import('@jalsoedesign/filezilla-connector-ftp')), ['FtpConnectorFactory']);
+assert.deepEqual(Object.keys(await import('@jalsoedesign/filezilla-connector-sftp')).sort(), ['FileZillaHostKeyStore', 'SftpConnectorFactory']);
+await assert.rejects(() => import('@jalsoedesign/filezilla-connector-sftp/dist/SftpConnector.js'), {code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'});
 assert.ok(new FtpConnectorFactory() instanceof ConnectorFactory);
 assert.ok(new SftpConnectorFactory() instanceof ConnectorFactory);
+assert.ok(new SftpConnectorFactory() instanceof ProfileConnectorFactory);
+assert.equal(typeof require('@jalsoedesign/portline-core').ProfileCatalog, 'function');
+assert.equal(typeof CredentialResolver, 'function');
 assert.equal(typeof FtpConnectorFactory.fromServer, 'function');
 assert.equal(typeof SftpConnectorFactory.fromServer, 'function');
-console.log('Packed CJS/ESM entry points and shared runtime identity passed');
+console.log('Packed entry points, FileZilla-only exports and Dockline factory results passed');
 `);
 await command('install', process.execPath, [
     npmCli,
     'install',
-    '--offline=false',
+    `--offline=${process.env.npm_config_offline ?? 'false'}`,
     '--no-audit',
     '--no-fund',
 ], directory);
 await copyFile(path.join(directory, 'node_modules/@jalsoedesign/filezilla-cli/examples/transfer-recipes.ts'),
     path.join(directory, 'transfer-recipes.ts'));
+await writeFile(path.join(directory, 'removed-exports.ts'), `// @ts-expect-error Generic adapters are imported from Dockline directly.
+import {SftpConnector} from '@jalsoedesign/filezilla-connector-sftp';
+// @ts-expect-error Generic errors and pools are imported from Dockline directly.
+import {AuthError, ConnectorPool} from '@jalsoedesign/filezilla-connector-abstract';
+void [SftpConnector, AuthError, ConnectorPool];
+`);
 await writeFile(path.join(directory, 'features.ts'), `import {Readable} from 'node:stream';
-import {ConnectorPool, ConnectorRegistry, BandwidthBudget, NameResolutionError, PublicationError} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector, SftpConnectorFactory, KnownHostsStore} from '@jalsoedesign/filezilla-connector-sftp';
+import {ConnectorPool, BandwidthBudget, NameResolutionError, PublicationError} from '@jalsoedesign/dockline-abstract';
+import {ConnectorRegistry} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnector, KnownHostsStore} from '@jalsoedesign/dockline-sftp-client';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
 import {ServerProtocol, readSiteManagerReport, SiteIdentityStore, createMetadataSnapshot, diffMetadata} from '@jalsoedesign/filezilla-core';
 const make = () => new SftpConnector({host: 'localhost', port: 22, username: 'fixture', initialPath: '',
     requireTrustPolicy: true, hasTrustPolicy: () => false, acceptTrustPolicy: () => false,
@@ -166,15 +203,21 @@ void [pool, registration, upload, copy, digest, inventory, KnownHostsStore.open,
     readSiteManagerReport, SiteIdentityStore, createMetadataSnapshot, diffMetadata];
 `);
 
-const quickStart = await readFile(path.join(repository, 'docs/guide/quick-start.md'), 'utf8');
-const examples = [...quickStart.matchAll(/```ts\r?\n([\s\S]*?)```/g)].map(match => match[1]);
+const documentation = JSON.parse(await readFile(path.join(repository, 'docs/example-variants.json'), 'utf8'));
 
-if (examples.length !== 4) {
-    throw new Error('Review the quick-start compilation cases when its code blocks change');
+if (!documentation.programs.length) {
+    throw new Error('The documentation manifest must contain runnable examples');
 }
 
-for (const [index, example] of [examples[0], examples[1] + examples[2], examples[3]].entries()) {
-    await writeFile(path.join(directory, `quick-start-${index}.ts`), example);
+for (const program of documentation.programs) {
+    const asset = documentation.assets.find(asset => asset.name === program.name && asset.filename.endsWith('.ts'));
+
+    if (!asset || path.basename(asset.filename) !== asset.filename) {
+        throw new Error('A complete TypeScript asset is required for ' + program.name);
+    }
+
+    await copyFile(path.join(repository, 'docs/public/examples', asset.filename),
+        path.join(directory, 'documented-' + asset.filename));
 }
 
 await command('types', process.execPath, [path.join(directory, 'node_modules/typescript/bin/tsc'), '--project', path.join(directory, 'tsconfig.json')], directory);

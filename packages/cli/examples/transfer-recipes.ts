@@ -3,18 +3,9 @@ import {open, stat, unlink} from 'node:fs/promises';
 import {Transform} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import type {Server} from '@jalsoedesign/filezilla-core';
-import {SftpConnectorFactory, type SftpConnector} from '@jalsoedesign/filezilla-connector-sftp';
-import {
-    checkAbort,
-    IntegrityError,
-    NotSupportedError,
-    publishFile,
-    ResourceLimitError,
-    toReadable,
-    type ConnectorOperationOptions,
-    type PublicationResult,
-    type TransferConnector,
-} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {type SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {checkAbort, IntegrityError, NotSupportedError, publishFile, ResourceLimitError, toReadable, type ConnectorOperationOptions, type PublicationResult, type TransferConnector} from '@jalsoedesign/dockline-abstract';
 
 export interface RecipeConnector extends TransferConnector {
     connect(options?: ConnectorOperationOptions): Promise<void>;

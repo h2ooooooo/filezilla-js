@@ -1,8 +1,8 @@
 import {open} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
-import {ConnectorError} from '@jalsoedesign/filezilla-connector-abstract';
-import type {SftpHostKeyChallenge} from './SftpConnector.js';
+import {ConnectorError} from '@jalsoedesign/dockline-abstract';
+import type {SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
 
 const MAX_FILE_BYTES = 1024 * 1024;
 

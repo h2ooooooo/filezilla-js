@@ -1,8 +1,8 @@
 {
     "name": "@jalsoedesign/filezilla-connector-sftp",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "type": "module",
-    "description": "FileZilla saved-site SFTP mapping, read-only host-key import and Dockline compatibility exports",
+    "description": "Map FileZilla saved sites to Dockline SFTP settings and import FileZilla trusted host keys",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -14,19 +14,20 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@jalsoedesign/filezilla-connector-abstract": "^1.0.0",
-        "fast-xml-parser": "5.11.1",
-        "@jalsoedesign/dockline-sftp-client": "^1.0.0"
+        "@jalsoedesign/filezilla-connector-abstract": "^2.0.0",
+        "fast-xml-parser": "5.12.0",
+        "@jalsoedesign/dockline-sftp-client": "^1.1.0",
+        "@jalsoedesign/dockline-abstract": "^1.1.0"
     },
     "peerDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0"
+        "@jalsoedesign/filezilla-core": "^1.2.0"
     },
     "devDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.0.0",
+        "@jalsoedesign/filezilla-core": "^1.2.0",
         "ssh2": "1.17.0",
-        "vitest": "5.0.0",
+        "vitest": "5.1.0",
         "typescript": "6.0.3",
-        "@types/node": "22.20.2",
+        "@types/node": "22.20.5",
         "@types/ssh2": "1.15.6",
         "ssh2-sftp-client": "12.1.1"
     },
@@ -36,15 +37,15 @@
     },
     "files": [
         "dist",
-        "LICENSE"
+        "LICENSE",
+        "README.md"
     ],
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
         },
-        "./package.json": "./package.json",
-        "./dist/*": "./dist/*"
+        "./package.json": "./package.json"
     },
     "repository": {
         "type": "git",

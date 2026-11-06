@@ -19,11 +19,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
       - name: Use the declared package manager
-        run: npm install --global npm@12.0.2
-      - name: Install locked dependencies
-        run: npm ci
+        uses: ./.github/actions/setup-npm
+      - name: Install registry dependencies
+        run: npm ci --ignore-scripts
+      - name: Audit development and runtime dependencies
+        run: npm audit --include=dev
+      - name: Validate portable dependency locks
+        run: npm run check:locks && npm run test:locks
       - name: Check repository contents
         run: npm run check:repository
       - name: Lint authored code and styles
@@ -32,12 +35,16 @@ jobs:
         run: npm run test:style
       - name: Build package code and declarations
         run: npm run build
+      - name: Check documented APIs against declarations
+        run: npm run docs:api:check && npm run docs:imports:check
       - name: Exercise local protocol servers and SDK behavior
         run: npm test
-      - name: Verify all five publishable packages
+      - name: Verify all workspace packages
         run: npm run check:packages
       - name: Verify isolated SDK and CLI consumers
         run: npm run check:consumer
+      - name: Execute documented language variants
+        run: npm run docs:examples:check
       - name: Check production dependencies
         run: npm run audit:production
 
@@ -50,7 +57,7 @@ jobs:
           node-version: 24.15.0
           cache: npm
           cache-dependency-path: docs/package-lock.json
-      - run: npm install --global npm@12.0.2
+      - uses: ./.github/actions/setup-npm
       - run: npm run docs:install
       - run: npm run audit:docs
       - run: npm run docs:build

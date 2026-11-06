@@ -57,8 +57,8 @@ For terminal searches, install [the CLI](../cli/README.md) and run `filezilla-js
 
 While `@jalsoedesign/filezilla-core` handles the configuration parsing, you can use the dedicated connectors to interact with the files:
 
-- [`@jalsoedesign/filezilla-connector-ftp`](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-ftp) - High-level API for FTP, FTPS, and FTPES.
-- [`@jalsoedesign/filezilla-connector-sftp`](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-sftp) - High-level API for SFTP.
+- [`@jalsoedesign/filezilla-connector-ftp`](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-ftp) - Translate saved FTP/FTPS sites into Dockline configurations or adapters.
+- [`@jalsoedesign/filezilla-connector-sftp`](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-sftp) - Translate saved SFTP sites and read FileZilla trusted-key metadata.
 
 ## Documentation
 
@@ -81,3 +81,5 @@ npm test
 ## License
 
 MIT © [JalsoeDesign](https://www.jalsoedesign.net)
+
+Normalized profiles use FileZillaProfileSource. Explicit native settings changes use createFileZillaWriter with Portline preview/apply, lock checks and backups; legacy SiteManager/Server edits remain in memory.

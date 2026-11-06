@@ -1,51 +1,24 @@
 # SFTP and host trust
 
-The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+The functions below are contextual trust integrations. Supply a selected native `Server`, explicit trust callbacks and the selected FileZilla host-key file where used. They return disconnected Dockline connectors, not a separately implemented FileZilla SSH client. Put imports at file scope and connect/disconnect as shown in the [complete program](/guide/quick-start).
+
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
 The adapter uses `ssh2-sftp-client` 12.1.1. It supports password authentication, private-key contents and a private-key path. Both direct construction and saved-site factories accept trust configuration.
 
 ## Pin a separately trusted host key
 
-```ts
-import {createHash} from 'node:crypto';
-import {SftpConnector} from '@jalsoedesign/filezilla-connector-sftp';
-
-const expectedFingerprint = process.env.SFTP_HOST_FINGERPRINT;
-const password = process.env.SFTP_PASSWORD;
-if (!expectedFingerprint || !password) {
-    throw new Error('Credentials and an independently trusted fingerprint are required.');
-}
-
-const connector = new SftpConnector({
-    host: 'sftp.example.test',
-    port: 22,
-    username: 'deploy',
-    password,
-    initialPath: '/releases',
-    hostVerifier: (key: Buffer) => {
-        const digest = createHash('sha256').update(key).digest('base64').replace(/=+$/, '');
-        return `SHA256:${digest}` === expectedFingerprint;
-    },
-});
-
-try {
-    await connector.connect();
-    for await (const entry of connector.list('', {deep: false})) {
-        console.log(entry.path, entry.type);
-    }
-} finally {
-    await connector.disconnect();
-}
-```
-
-`hostVerifier` receives raw SSH public-key bytes. It may return a boolean, return a promise of a boolean, or call its second `verify(accepted)` argument. An always-true callback does not establish trust.
+Use the [complete saved SFTP program](/guide/quick-start#load-one-sftp-site-connect-and-upload-one-file). It loads credentials only for the exact selected site, maps its settings with `SftpConnectorFactory.toConfig`, verifies host, port and the independently supplied fingerprint, then transfers using Dockline. For generic direct connections use [Dockline SFTP](https://h2ooooooo.github.io/dockline/sftp/quick-start).
 
 ## Application trust callbacks
 
 `requireTrustPolicy: true` requires **both** `hasTrustPolicy` and `acceptTrustPolicy` before connecting. Both receive an `SftpHostKeyChallenge` and may return a boolean or `Promise<boolean>`.
 
-```ts
-import {SftpConnectorFactory, type SftpHostKeyChallenge} from '@jalsoedesign/filezilla-connector-sftp';
+::: code-group
+
+```ts [TypeScript]
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {type SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
 
 function createTrustedConnector(
     site: Parameters<typeof SftpConnectorFactory.fromServer>[0],
@@ -61,6 +34,61 @@ function createTrustedConnector(
 }
 ```
 
+```js [JavaScript]
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {} from '@jalsoedesign/dockline-sftp-client';
+
+function createTrustedConnector(
+    site,
+    hasTrust,
+    requestAcceptance,
+) {
+    return SftpConnectorFactory.fromServer(site, {
+        requireTrustPolicy: true,
+        hasTrustPolicy: hasTrust,
+        acceptTrustPolicy: requestAcceptance,
+        timeoutMs: 30_000,
+    });
+}
+```
+
+```js [MJS]
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {} from '@jalsoedesign/dockline-sftp-client';
+
+function createTrustedConnector(
+    site,
+    hasTrust,
+    requestAcceptance,
+) {
+    return SftpConnectorFactory.fromServer(site, {
+        requireTrustPolicy: true,
+        hasTrustPolicy: hasTrust,
+        acceptTrustPolicy: requestAcceptance,
+        timeoutMs: 30_000,
+    });
+}
+```
+
+```js [CommonJS]
+const {SftpConnectorFactory} = require('@jalsoedesign/filezilla-connector-sftp');
+
+function createTrustedConnector(
+    site,
+    hasTrust,
+    requestAcceptance,
+) {
+    return SftpConnectorFactory.fromServer(site, {
+        requireTrustPolicy: true,
+        hasTrustPolicy: hasTrust,
+        acceptTrustPolicy: requestAcceptance,
+        timeoutMs: 30_000,
+    });
+}
+```
+
+:::
+
 The challenge contains host, port, key type, OpenSSH-style SHA-256 fingerprint, public key bytes, `previousFingerprint`, `changed` and `abortSignal`. `hasTrustPolicy` checks the exact identity. An unknown key or a key change observed by this connector requires `acceptTrustPolicy` to return true. `previousFingerprint` is in-memory history for that connector, not a persistent known-hosts database. Respect `abortSignal` when showing a prompt.
 
 If a `hostVerifier` is also supplied, it must accept before policy callbacks run. `requireTrustPolicy` is **optional** and defaults to false; when no verifier or policy callbacks are configured, compatibility behavior accepts the key. Choose an explicit verifier or required policy for trusted connections.
@@ -71,12 +99,12 @@ The application owns storage, first-use review and changed-key approval. Reading
 
 The separate `FileZillaHostKeyStore` reads an explicitly selected modern FileZilla `hostkeys.xml` and supplies exact known-key lookup. FileZilla 3.71's store is separate from `sitemanager.xml` in its settings directory; the helper does not discover that path for you.
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 import type {Server} from '@jalsoedesign/filezilla-core';
-import {
-    FileZillaHostKeyStore, SftpConnectorFactory,
-    type SftpHostKeyChallenge,
-} from '@jalsoedesign/filezilla-connector-sftp';
+import {FileZillaHostKeyStore, SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {type SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
 
 async function useFileZillaTrust(
     site: Server,
@@ -92,13 +120,68 @@ async function useFileZillaTrust(
 }
 ```
 
+```js [JavaScript]
+import {FileZillaHostKeyStore, SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {} from '@jalsoedesign/dockline-sftp-client';
+
+async function useFileZillaTrust(
+    site,
+    filename,
+    accept,
+) {
+    const store = await FileZillaHostKeyStore.fromFile(filename);
+    return SftpConnectorFactory.fromServer(site, {
+        requireTrustPolicy: true,
+        hasTrustPolicy: store.hasTrustPolicy,
+        acceptTrustPolicy: accept,
+    });
+}
+```
+
+```js [MJS]
+import {FileZillaHostKeyStore, SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {} from '@jalsoedesign/dockline-sftp-client';
+
+async function useFileZillaTrust(
+    site,
+    filename,
+    accept,
+) {
+    const store = await FileZillaHostKeyStore.fromFile(filename);
+    return SftpConnectorFactory.fromServer(site, {
+        requireTrustPolicy: true,
+        hasTrustPolicy: store.hasTrustPolicy,
+        acceptTrustPolicy: accept,
+    });
+}
+```
+
+```js [CommonJS]
+const {FileZillaHostKeyStore, SftpConnectorFactory} = require('@jalsoedesign/filezilla-connector-sftp');
+
+async function useFileZillaTrust(
+    site,
+    filename,
+    accept,
+) {
+    const store = await FileZillaHostKeyStore.fromFile(filename);
+    return SftpConnectorFactory.fromServer(site, {
+        requireTrustPolicy: true,
+        hasTrustPolicy: store.hasTrustPolicy,
+        acceptTrustPolicy: accept,
+    });
+}
+```
+
+:::
+
 This is a **read-only snapshot**, limited to a regular UTF-8 file of at most 1 MiB. It validates the modern XML shape, canonical base64 and SSH key envelope, and rejects malformed/duplicate entries and DTD/entity declarations. Matching case-folds the host but requires exact port and raw public-key bytes; it does not merge DNS aliases or trailing-dot host names. `getKnownFingerprints(host, port)` returns stored SHA-256 fingerprints for application review.
 
 The importer does not write approvals, watch the file, import legacy PuTTY trust data or adopt FileZilla's `AllowedInsecureAlgorithms` policy. Reload explicitly after changing the source. An unknown/changed key still needs the caller's acceptance callback, and durable storage remains caller-owned. The implementation was checked against FileZilla's modern host-key store format;
 
 ## Private keys
 
-`privateKey` contains key text/bytes; `privateKeyPath` is a local file read at connect time and takes precedence if both are present. `passphrase` unlocks an encrypted key supported by the SSH dependency. The factory uses saved `keyFile` for key mode unless an explicit key override is supplied; it uses the saved password as passphrase unless overridden. It does not convert PuTTY key formats.
+`privateKey` contains key text/bytes; `privateKeyPath` is a local file read at connect time and takes precedence if both are present. `passphrase` unlocks an encrypted key supported by the SSH dependency. The FileZilla factory maps saved `keyFile` and passphrase metadata unless overridden. Dockline delegates key loading to dockline-keys, which accepts modern OpenSSH, PPK v2/v3, PKCS#8 and supported traditional PEM, including encrypted inputs. Normalization occurs in memory without rewriting the original file. Use [dockline-keys](https://h2ooooooo.github.io/dockline/keys/) for explicit conversion and encrypted exports.
 
 ## Paths, errors and recovery
 

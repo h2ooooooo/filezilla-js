@@ -35,14 +35,51 @@ All enums and types below are exported by `@jalsoedesign/filezilla-core`. Protoc
 
 `MAX_VALUE` remains an alias of `CLOUDFLARE_R2` to preserve existing numeric values. Use `server.siteProtocolName` for display: it deliberately excludes the sentinel and returns `CLOUDFLARE_R2` for ID 24. Raw numeric-enum reverse lookup still reflects TypeScript's alias behavior.
 
+## ServerType
+
+`ServerType` identifies the saved path dialect. It is separate from [`ServerProtocol`](#serverprotocol), which identifies FTP, SFTP and other protocols. These are the compatibility IDs exported by this reader:
+
+| ID | Member | Remote-directory decoder |
+| --- | --- | --- |
+| 0 | `DEFAULT` | Supported with no prefix |
+| 1 | `UNIX` | Supported with no prefix |
+| 2 | `VMS` | Unsupported |
+| 3 | `DOS` | Unsupported; native dialect prefers backslashes |
+| 4 | `MVS` | Unsupported |
+| 5 | `VXWORKS` | Unsupported |
+| 6 | `ZVM` | Unsupported |
+| 7 | `HPNONSTOP` | Unsupported |
+| 8 | `DOS_VIRTUAL` | Supported with no prefix |
+| 9 | `CYGWIN` | Supported with no prefix |
+| 10 | `DOS_FWD_SLASHES` | Unsupported; native dialect prefers forward slashes |
+| 11 | `SERVERTYPE_MAX` | Sentinel, not a saved path type |
+
+See [the exported enum source](https://github.com/h2ooooooo/filezilla-js/blob/main/packages/core/src/enum/ServerType.ts), the [annotated native path example](/guide/how-it-works#decode-filezilla-remote-directories) and [the decoder's grammar](/reference/server#remote-directory-grammar). FileZilla defines its native path types in `src/include/server.h`; the [official upstream source](https://filezilla-project.org/sourcecode.php) is the starting point for those definitions. The table above specifies this library's compatibility values and decoding support.
+
+## LogonType
+
+`LogonType` describes the saved authentication mode. It does not guarantee that credentials are available to the reader.
+
+| ID | Member | Meaning |
+| --- | --- | --- |
+| 0 | `anonymous` | Anonymous login |
+| 1 | `normal` | Username/password login |
+| 2 | `ask` | Prompt for credentials in the native UI |
+| 3 | `interactive` | Interactive authentication |
+| 4 | `account` | Account-based login |
+| 5 | `key` | Private-key login; `Keyfile` supplies the saved host-side key path |
+| 6 | `profile` | S3 profile |
+| 7 | `adc` | Google Cloud Application Default Credentials |
+| 8 | `count` | Sentinel |
+
+See [the exported enum source](https://github.com/h2ooooooo/filezilla-js/blob/main/packages/core/src/enum/LogonType.ts) and [credential loading](/guide/site-manager#credentials-and-serialization) for the distinction between saved authentication metadata and supported secret access.
+
 ## Other enums
 
 | Enum | Members in numeric order, starting at zero |
 | --- | --- |
-| `LogonType` | `anonymous`, `normal`, `ask`, `interactive`, `account`, `key`, `profile`, `adc`, `count` |
 | `PasvMode` | `MODE_DEFAULT`, `MODE_ACTIVE`, `MODE_PASSIVE` |
 | `CharsetEncoding` | `ENCODING_UTF8`, `ENCODING_CUSTOM`, `ENCODING_AUTO` |
-| `ServerType` | `DEFAULT`, `UNIX`, `VMS`, `DOS`, `MVS`, `VXWORKS`, `ZVM`, `HPNONSTOP`, `DOS_VIRTUAL`, `CYGWIN`, `DOS_FWD_SLASHES`, `SERVERTYPE_MAX` |
 | `ServerFormat` | `HOST_ONLY`, `WITH_OPTIONAL_PORT`, `WITH_USER_AND_OPTIONAL_PORT`, `URL`, `URL_WITH_PASSWORD` |
 
 `count` and `SERVERTYPE_MAX` are sentinels. `ServerFormat` is exported metadata; the library currently has no corresponding formatter implementation.

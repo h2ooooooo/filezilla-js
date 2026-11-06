@@ -3,9 +3,9 @@ import {mkdtemp, writeFile, readFile, rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {ConnectorError} from '@jalsoedesign/filezilla-connector-abstract';
-import {FileZillaHostKeyStore} from '../src/FileZillaHostKeyStore.js';
-import type {SftpHostKeyChallenge} from '../src/SftpConnector.js';
+import {ConnectorError} from '@jalsoedesign/dockline-abstract';
+import {FileZillaHostKeyStore} from '../src/index.js';
+import type {SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
 
 let directory: string;
 let filename: string;

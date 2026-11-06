@@ -1,23 +1,26 @@
-import {getDefaultSiteManager, getSiteManager} from '@jalsoedesign/filezilla-core';
-import {CommandContext, CommandHandler} from './types.js';
-import {listCommand} from './commands/list.js';
-import {getCommand} from './commands/get.js';
-import {searchCommand} from './commands/search.js';
+import path from 'node:path';
+import {getDefaultSiteManagerPath, getSiteManager, createFileZillaWriter} from '@jalsoedesign/filezilla-core';
+import {createProfileCli, createProfileWriteCommands} from '@jalsoedesign/portline-cli';
+import {createFileZillaCliSource} from './source.js';
 import {runCheckCommand} from './commands/check.js';
 
 export {checkConnection} from './commands/check.js';
 export type {ConnectionCheckOptions, ConnectionCheckResult, ConnectionCheckStage, ConnectionCheckStatus} from './commands/check.js';
-import * as process from 'process';
+export {createFileZillaCliSource} from './source.js';
 
-function showHelp() {
-    console.log(`
+const help = `
 Usage: filezilla-js <command> [options] [args]
 
 Commands:
   list                      List all servers
   search <term>             Search all saved fields and show profile details
+  source                    Show the selected configuration source
   get <path> [property]    Get a server or a specific property value
   check <path>              Check a connection without remote mutations (check --help)
+  write-status              Show write availability and native diagnostic codes
+  write                     Preview normalized profile writes (write --help)
+  sync                      Preview one-way cross-app sync (sync --help)
+  apply                     Apply a reviewed preview with fresh lock checks (apply --help)
 
 Options:
   --file <path>             Specify the sitemanager.xml file path
@@ -40,109 +43,52 @@ Examples:
   filezilla-js get "My Server"
   filezilla-js get "My Server" host
   filezilla-js get "My Server" --json
-`);
-}
+`;
 
-function parseArgs() {
-    const args = process.argv.slice(2);
-    const options: CommandContext['options'] = {};
-    const positional: string[] = [];
+const cli = createProfileCli({
+    name: 'filezilla-js',
+    singular: 'server',
+    plural: 'servers',
+    help,
+    ignoreUnknownOptions: true,
+    commands: {
+        check: runCheckCommand,
+        ...createProfileWriteCommands({
+            application: 'filezilla',
+            importSource: name => import(name),
+            writer: async options => {
+                const location = path.resolve(options.file ?? getDefaultSiteManagerPath());
 
-    for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
+                return createFileZillaWriter({
+                    id: 'filezilla:' + location,
+                    application: 'FileZilla',
+                    location,
+                    storage: [{kind: 'file', path: location, format: 'xml'}],
+                }, {
+                    mode: options.mode as 'create' | 'update' | 'upsert' | undefined,
+                    allowLossy: options.allowLossy === true,
+                    registryMode: options.registryMode as 'transactional' | 'guarded' | undefined,
+                });
+            },
+        }),
+    },
+    loadSource: options => {
+        const filename = options.file ?? getDefaultSiteManagerPath();
+        const location = path.resolve(filename);
 
-        if (arg === '--json') {
-            options.json = true;
-        } else if (arg === '--table') {
-            options.table = true;
-        } else if (arg === '--full') {
-            options.full = true;
-        } else if (arg === '--recurse') {
-            options.recurse = true;
-        } else if (arg === '--show-password') {
-            options.showPassword = true;
-        } else if (arg === '--file' && i + 1 < args.length) {
-            options.file = args[++i];
-        } else if (arg === '--search') {
-            if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
-                throw new Error('--search requires a term');
-            }
-
-            options.search = args[++i];
-        } else if (arg === '--help' || arg === '-h') {
-            options.help = true;
-        } else if (arg.startsWith('--')) {
-            // ignore unknown flags
-        } else {
-            positional.push(arg);
-        }
-    }
-
-    return {options, positional};
-}
+        return createFileZillaCliSource(getSiteManager(filename), {
+            id: `filezilla:${location}`,
+            application: 'FileZilla',
+            location,
+            storage: [{kind: 'file', path: location, format: 'xml'}],
+        });
+    },
+});
 
 export async function run() {
-    if (process.argv[2] === 'check') {
-        await runCheckCommand(process.argv.slice(3));
+    const exitCode = await cli.run();
 
-        return;
-    }
-
-    let parsed: ReturnType<typeof parseArgs>;
-
-    try {
-        parsed = parseArgs();
-    } catch (error: any) {
-        console.error(process.argv.includes('--json') ?
-            JSON.stringify({error: error.message}) :
-            `Error: ${error.message}`);
-        process.exit(1);
-    }
-
-    const {options, positional} = parsed;
-
-    if (options.help || (positional.length === 0 && options.search === undefined)) {
-        showHelp();
-
-        return;
-    }
-
-    const command = positional[0] ?? 'search';
-    const commandArgs = positional.slice(1);
-
-    const commands: Record<string, CommandHandler> = {
-        list: listCommand,
-        get: getCommand,
-        search: searchCommand,
-    };
-
-    const handler = commands[command];
-
-    if (!handler) {
-        console.error(`Error: Unknown command "${command}"`);
-        showHelp();
-        process.exit(1);
-    }
-
-    try {
-        const siteManager = options.file ?
-            getSiteManager(options.file) :
-            getDefaultSiteManager();
-
-        const context: CommandContext = {
-            siteManager,
-            args: commandArgs,
-            options,
-        };
-
-        await handler(context);
-    } catch (e: any) {
-        if (options.json) {
-            console.error(JSON.stringify({error: e.message}));
-        } else {
-            console.error(`Error: ${e.message}`);
-        }
-
-        process.exit(1);
+    if (exitCode !== 0) {
+        process.exit(exitCode);
     }
 }

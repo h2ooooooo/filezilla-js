@@ -1,0 +1,188 @@
+{
+    "assets": [
+        {
+            "name": "read-sites",
+            "filename": "read-sites.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "read-sites",
+            "filename": "read-sites.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "read-sites",
+            "filename": "read-sites.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "read-sites",
+            "filename": "read-sites.cjs",
+            "language": "CommonJS"
+        },
+        {
+            "name": "saved-sftp",
+            "filename": "saved-sftp.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "saved-sftp",
+            "filename": "saved-sftp.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "saved-sftp",
+            "filename": "saved-sftp.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "saved-sftp",
+            "filename": "saved-sftp.cjs",
+            "language": "CommonJS"
+        },
+        {
+            "name": "saved-ftp",
+            "filename": "saved-ftp.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "saved-ftp",
+            "filename": "saved-ftp.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "saved-ftp",
+            "filename": "saved-ftp.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "saved-ftp",
+            "filename": "saved-ftp.cjs",
+            "language": "CommonJS"
+        },
+        {
+            "name": "inspect-import",
+            "filename": "inspect-import.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "inspect-import",
+            "filename": "inspect-import.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "inspect-import",
+            "filename": "inspect-import.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "inspect-import",
+            "filename": "inspect-import.cjs",
+            "language": "CommonJS"
+        },
+        {
+            "name": "profile-metadata",
+            "filename": "profile-metadata.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "profile-metadata",
+            "filename": "profile-metadata.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "profile-metadata",
+            "filename": "profile-metadata.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "profile-metadata",
+            "filename": "profile-metadata.cjs",
+            "language": "CommonJS"
+        },
+        {
+            "name": "preview-profile",
+            "filename": "preview-profile.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "preview-profile",
+            "filename": "preview-profile.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "preview-profile",
+            "filename": "preview-profile.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "preview-profile",
+            "filename": "preview-profile.cjs",
+            "language": "CommonJS"
+        },
+        {
+            "name": "check-site",
+            "filename": "check-site.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "check-site",
+            "filename": "check-site.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "check-site",
+            "filename": "check-site.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "check-site",
+            "filename": "check-site.cjs",
+            "language": "CommonJS"
+        }
+    ],
+    "programs": [
+        {
+            "name": "read-sites",
+            "page": "api/quick-start.md",
+            "args": "./sitemanager.xml",
+            "output": "{\"path\":\"Demo\",\"host\":\"127.0.0.1\",\"protocol\":\"SFTP\"}\nExact selection: Demo\nHost matches: 1\nMetadata only; no remote connection."
+        },
+        {
+            "name": "saved-sftp",
+            "page": "guide/quick-start.md",
+            "args": "./sitemanager.xml Production/Web",
+            "output": "Uploaded dockline-hello.txt.\nDownloaded downloaded-hello.txt.\nConnection closed."
+        },
+        {
+            "name": "saved-ftp",
+            "page": "guide/quick-start.md",
+            "args": "./sitemanager.xml Production/FTP",
+            "output": "Uploaded dockline-hello.txt.\nDownloaded downloaded-hello.txt.\nConnection closed."
+        },
+        {
+            "name": "inspect-import",
+            "page": "guide/import-workflows.md",
+            "args": "./sitemanager.xml",
+            "output": "Complete: true\nAccepted: 1\nRejected: 0"
+        },
+        {
+            "name": "profile-metadata",
+            "page": "api/profiles.md",
+            "args": "./sitemanager.xml",
+            "output": "Profile: Demo\nConnections: 1\nMetadata only; credentials unresolved."
+        },
+        {
+            "name": "preview-profile",
+            "page": "api/writing.md",
+            "args": "./sitemanager.xml",
+            "output": "Preview changes: 1\nApplied: false"
+        },
+        {
+            "name": "check-site",
+            "page": "guide/connection-check.md",
+            "args": "./sitemanager.xml Production/Web",
+            "output": "Connected: true\nCleanup: closed"
+        }
+    ]
+}

@@ -1,11 +1,8 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {PassThrough, Readable, Writable} from 'node:stream';
 import {once} from 'node:events';
-import {
-    AuthError, ConnectorError, ConnectionClosedError, HostTrustError, NotFoundError,
-    OperationAbortedError, OperationTimeoutError, PermissionError,
-} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector, type SftpConnectorConfig} from '../src/SftpConnector.js';
+import {AuthError, ConnectorError, ConnectionClosedError, HostTrustError, NotFoundError, OperationAbortedError, OperationTimeoutError, PermissionError} from '@jalsoedesign/dockline-abstract';
+import {SftpConnector, type SftpConnectorConfig} from '@jalsoedesign/dockline-sftp-client';
 
 const state = vi.hoisted(() => ({
     clients: [] as any[],

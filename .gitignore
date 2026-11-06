@@ -29,3 +29,9 @@ docs/public/reports/
 docs/public/verification/
 .DS_Store
 Thumbs.db
+
+.local-dev/
+
+local-packages.json
+
+.site/

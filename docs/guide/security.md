@@ -30,6 +30,6 @@ Trust decisions belong to the application. A Site Manager XML import is not a tr
 
 CLI list/get output masks passwords; `--show-password` intentionally reveals them. Avoid sending credential output to shared terminals, logs or screenshots. List/get masking occurs after credentials have been loaded. The read-only check loads only its selected credential, and its fixed JSON messages never serialize raw transport errors or credentials.
 
-The [current dependency review](/reference/specification) records live production, full development and separate documentation audit results, plus outstanding upgrade constraints. Test-fixture advisories must remain visible even when published runtime dependencies are clear. Run audit with explicit online access; an inherited offline setting can otherwise produce a misleading empty result.
+The [dependency guide](/development/dependencies) explains runtime, development and documentation boundaries. Audit results belong to the run that produced them, not to a permanent clean-status claim. Test-fixture advisories must remain visible even when published runtime dependencies are clear. Run audit with explicit online access; an inherited offline setting can otherwise produce a misleading empty result.
 
 Automatic retry does not prove a mutation is safe to repeat. Replayable upload factories explicitly permit restarting an overwriting upload; callers still own source identity, conflicts, partial-file recovery and final publication decisions.

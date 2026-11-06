@@ -214,3 +214,5 @@ See [connection checks](https://h2ooooooo.github.io/filezilla-js/guide/connectio
 ## License
 
 MIT © [JalsoeDesign](https://www.jalsoedesign.net)
+
+Profile writing uses write/sync to produce previews, write-status to inspect availability and explicit apply to commit a reviewed plan with fresh guards. See the complete CLI input/output reference in the documentation.

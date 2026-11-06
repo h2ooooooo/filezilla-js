@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from 'vitest';
 import {PassThrough, Readable} from 'node:stream';
-import {ConnectorPool} from '../src/ConnectorPool.js';
-import {OperationAbortedError, OperationTimeoutError, PoolClosedError} from '../src/errors.js';
+import {ConnectorPool} from '@jalsoedesign/dockline-abstract';
+import {OperationAbortedError, OperationTimeoutError, PoolClosedError} from '@jalsoedesign/dockline-abstract';
 
 const tick = () => new Promise<void>(resolve => setImmediate(resolve));
 

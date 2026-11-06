@@ -1,32 +1,32 @@
 # Error reference
 
-The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
-Import shared connector errors from `@jalsoedesign/filezilla-connector-abstract`. Both concrete connectors re-export the same constructors. Compatible installed copies preserve `instanceof` identity. Core metadata errors and the SFTP known-hosts conflict subclass are described separately below.
+Import shared connector errors from `@jalsoedesign/dockline-abstract`. Dockline protocol clients re-export relevant shared constructors. FileZilla connector integrations do not re-export them. Compatible installed copies preserve `instanceof` identity. Core metadata errors and the SFTP known-hosts conflict subclass are described separately below.
 
 ## Shared hierarchy
 
 | Class | Parent | Meaning and stable fields |
 | --- | --- | --- |
 | `ConnectorError` | Error | Base with optional `cause`, `code` and `stage`. |
-| `AuthError` | ConnectorError | Authentication rejected; stage `authenticate`. |
-| `CredentialProviderError` | AuthError | Provider failed; stage `credentials`, code `CREDENTIAL_PROVIDER_FAILED`. |
-| `HostTrustError` | ConnectorError | Host identity rejected; stage `trust`, code `HOST_TRUST_REJECTED`. |
-| `TlsTrustError` | HostTrustError | TLS certificate trust failed; inherits the host-trust stage and code. |
-| `NameResolutionError` | ConnectorError | DNS failure; stage `resolve`, default code `ENOTFOUND`; the classifier preserves `EAI_AGAIN`. |
-| `ConnectionRefusedError` | ConnectorError | Connection refused; stage `connect`, code `ECONNREFUSED`. |
-| `DirectoryAccessError` | ConnectorError | Initial-directory setup failed; stage `directory`, optional underlying status code. |
-| `NotFoundError` | ConnectorError | Confirmed missing resource where the dependency preserves that distinction; see SFTP status conversion below. |
-| `PermissionError` | ConnectorError | Requested access was denied. |
-| `UnsupportedProtocolError` | ConnectorError | No connector supports the selected protocol. |
-| `NotSupportedError` | ConnectorError | Unsupported operation, strategy, option or protocol guarantee. |
-| `OperationAbortedError` | ConnectorError | Cancellation; code `ABORT_ERR`. |
-| `OperationTimeoutError` | ConnectorError | Deadline expired; code `ETIMEDOUT`. |
-| `ConnectionClosedError` | ConnectorError | Session closed; code `ECONNRESET`. |
-| `ResourceLimitError` | ConnectorError | A checksum/copy byte budget was exceeded. |
-| `IntegrityError` | ConnectorError | Digest, full-file hash response or observed file-size verification failed. |
-| `PoolClosedError` | ConnectorError | Acquisition/use is incompatible with a closed pool or revoked lease. |
-| `PublicationError` | ConnectorError | Composed publication failed; inspect the explicit remote `state` before recovery. |
+| `AuthError` | `ConnectorError` | Authentication rejected; stage `authenticate`. |
+| `CredentialProviderError` | `AuthError` | Provider failed; stage `credentials`, code `CREDENTIAL_PROVIDER_FAILED`. |
+| `HostTrustError` | `ConnectorError` | Host identity rejected; stage `trust`, code `HOST_TRUST_REJECTED`. |
+| `TlsTrustError` | `HostTrustError` | TLS certificate trust failed; inherits the host-trust stage and code. |
+| `NameResolutionError` | `ConnectorError` | DNS failure; stage `resolve`, default code `ENOTFOUND`; the classifier preserves `EAI_AGAIN`. |
+| `ConnectionRefusedError` | `ConnectorError` | Connection refused; stage `connect`, code `ECONNREFUSED`. |
+| `DirectoryAccessError` | `ConnectorError` | Initial-directory setup failed; stage `directory`, optional underlying status code. |
+| `NotFoundError` | `ConnectorError` | Confirmed missing resource where the dependency preserves that distinction; see SFTP status conversion below. |
+| `PermissionError` | `ConnectorError` | Requested access was denied. |
+| `UnsupportedProtocolError` | `ConnectorError` | No connector supports the selected protocol. |
+| `NotSupportedError` | `ConnectorError` | Unsupported operation, strategy, option or protocol guarantee. |
+| `OperationAbortedError` | `ConnectorError` | Cancellation; code `ABORT_ERR`. |
+| `OperationTimeoutError` | `ConnectorError` | Deadline expired; code `ETIMEDOUT`. |
+| `ConnectionClosedError` | `ConnectorError` | Session closed; code `ECONNRESET`. |
+| `ResourceLimitError` | `ConnectorError` | A checksum/copy byte budget was exceeded. |
+| `IntegrityError` | `ConnectorError` | Digest, full-file hash response or observed file-size verification failed. |
+| `PoolClosedError` | `ConnectorError` | Acquisition/use is incompatible with a closed pool or revoked lease. |
+| `PublicationError` | `ConnectorError` | Composed publication failed; inspect the explicit remote `state` before recovery. |
 
 `ConnectionStage` is `'resolve' | 'connect' | 'trust' | 'authenticate' | 'directory' | 'credentials' | 'ready'`. It is optional when the transport cannot identify a stage. Catch specific subclasses before their parents. SFTP's deprecated `KeyAuthError` is an alias of `AuthError`.
 
@@ -64,7 +64,7 @@ Identity-store schema/configuration validation uses `TypeError`. Reconciliation 
 
 ## Managed host-store failures
 
-`KnownHostsConflictError` is exported by `@jalsoedesign/filezilla-connector-sftp` and extends `HostTrustError`. Its zero-argument constructor indicates that the trusted record changed while approval was pending. Inspect and ask for approval against the new state; do not repeat an old approval. Store validation/locking can throw `ConnectorError`, cancellation uses `OperationAbortedError`, and filesystem failures may retain their ordinary Node error identity. See [managed known hosts](/guide/ssh-options#managed-known-hosts-storage).
+`KnownHostsConflictError` is exported by `@jalsoedesign/dockline-sftp-client` and extends `HostTrustError`. Its zero-argument constructor indicates that the trusted record changed while approval was pending. Inspect and ask for approval against the new state; do not repeat an old approval. Store validation/locking can throw `ConnectorError`, cancellation uses `OperationAbortedError`, and filesystem failures may retain their ordinary Node error identity. See [managed known hosts](/guide/ssh-options#managed-known-hosts-storage).
 
 ## Recovery boundaries
 

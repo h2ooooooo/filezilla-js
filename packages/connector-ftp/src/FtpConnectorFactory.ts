@@ -1,10 +1,11 @@
 import type {FtpTransferConfig} from '@jalsoedesign/dockline-ftp-client';
 import {Server, ServerProtocol, LogonType, PasvMode, CharsetEncoding} from '@jalsoedesign/filezilla-core';
-import {FtpConnector, FtpConnectorConfig} from './FtpConnector.js';
-import {UnsupportedProtocolError, NotSupportedError} from './errors.js';
-import {ConnectorFactory, type ConnectorOperationOptions, type ConnectorConnectionOptions} from '@jalsoedesign/filezilla-connector-abstract';
+import {FtpConnector, FtpConnectorConfig} from '@jalsoedesign/dockline-ftp-client';
+import {UnsupportedProtocolError, NotSupportedError} from '@jalsoedesign/dockline-abstract';
+import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {type ConnectorOperationOptions, type ConnectorConnectionOptions} from '@jalsoedesign/dockline-abstract';
 import type {ConnectionOptions} from 'node:tls';
-import type {FtpFilenameEncodingOptions} from './filename-encoding.js';
+import type {FtpFilenameEncodingOptions} from '@jalsoedesign/dockline-ftp-client';
 
 export interface FtpConnectorFactoryOptions extends ConnectorOperationOptions, ConnectorConnectionOptions {
     secureOptions?: ConnectionOptions;

@@ -6,8 +6,8 @@ import {Readable} from 'node:stream';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {describe, test, expect, afterEach} from 'vitest';
-import {FtpConnector} from '../src/FtpConnector.js';
-import {AuthError} from '../src/errors.js';
+import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
+import {AuthError} from '@jalsoedesign/dockline-abstract';
 
 // Public fixtures only: every server binds an OS-assigned loopback port and a new temporary root.
 const user = 'local-fixture';

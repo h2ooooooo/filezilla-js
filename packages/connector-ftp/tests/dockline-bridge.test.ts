@@ -1,8 +1,9 @@
+import * as fileZillaExports from '../src/index.js';
 import {describe, expect, it} from 'vitest';
 import {Server, ServerProtocol, LogonType, PasvMode, CharsetEncoding, ServerType} from '@jalsoedesign/filezilla-core';
 import {Dockline} from '@jalsoedesign/dockline-core';
-import {FtpConnector as TransferFtpConnector, AuthError as TransferAuthError} from '@jalsoedesign/dockline-ftp-client';
-import {FtpConnector, FtpConnectorFactory, AuthError} from '../src/index.js';
+import {FtpConnector as TransferFtpConnector} from '@jalsoedesign/dockline-ftp-client';
+import {FtpConnectorFactory} from '../src/index.js';
 
 function site(protocol: ServerProtocol): Server {
     return new Server({
@@ -51,9 +52,8 @@ describe('FileZilla FTP to Dockline bridge', () => {
         expect(Dockline.create(config)).toBeInstanceOf(Dockline);
     });
 
-    it('keeps existing class and error imports identical to Dockline', () => {
-        expect(FtpConnector).toBe(TransferFtpConnector);
-        expect(AuthError).toBe(TransferAuthError);
+    it('returns Dockline adapters without re-exporting the transport API', () => {
         expect(FtpConnectorFactory.fromServer(site(ServerProtocol.FTP))).toBeInstanceOf(TransferFtpConnector);
+        expect(Object.keys(fileZillaExports).sort()).toEqual(['FtpConnectorFactory']);
     });
 });

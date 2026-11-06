@@ -1,14 +1,8 @@
 import {describe, it, expect} from 'vitest';
 import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {SftpConnectorFactory} from '../src/SftpConnectorFactory.js';
-import {SftpConnector} from '../src/SftpConnector.js';
-import {
-    AuthError,
-    NotFoundError,
-    PermissionError,
-    UnsupportedProtocolError,
-    NotSupportedError,
-} from '../src/errors.js';
+import {SftpConnectorFactory} from '../src/index.js';
+import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {AuthError, NotFoundError, PermissionError, UnsupportedProtocolError, NotSupportedError} from '@jalsoedesign/dockline-abstract';
 
 function createMockServer(props: Partial<any> = {}): Server {
     const defaultProps = {

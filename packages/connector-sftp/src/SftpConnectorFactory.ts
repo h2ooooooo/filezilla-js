@@ -1,8 +1,8 @@
 import type {SftpTransferConfig} from '@jalsoedesign/dockline-sftp-client';
 import {Server, ServerProtocol, LogonType, CharsetEncoding} from '@jalsoedesign/filezilla-core';
 import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector, type SftpConnectorConfig} from './SftpConnector.js';
-import {UnsupportedProtocolError, NotSupportedError} from './errors.js';
+import {SftpConnector, type SftpConnectorConfig} from '@jalsoedesign/dockline-sftp-client';
+import {UnsupportedProtocolError, NotSupportedError} from '@jalsoedesign/dockline-abstract';
 
 export type SftpConnectorFactoryOptions = Omit<SftpConnectorConfig, 'host' | 'port' | 'username' | 'initialPath'>;
 

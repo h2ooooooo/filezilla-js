@@ -1,8 +1,14 @@
 # Read Site Manager
 
+For a complete program, XML fixture, matching run tabs and exact output, start with [the API quick start](/api/quick-start). The configuration snippet below is a contextual read: supply an existing XML path on the host. It reads metadata and prints nothing.
+
 ## Explicit file
 
-```ts
+Pass the path to an existing Site Manager XML file on the host. `getSiteManager()` reads it synchronously and returns a `SiteManager`; `includePasswords: false` leaves saved passwords unloaded.
+
+::: code-group
+
+```ts [TypeScript]
 import {getSiteManager} from '@jalsoedesign/filezilla-core';
 
 const sites = getSiteManager('C:/Users/example/AppData/Roaming/FileZilla/sitemanager.xml', {
@@ -10,9 +16,33 @@ const sites = getSiteManager('C:/Users/example/AppData/Roaming/FileZilla/siteman
 });
 ```
 
-Reading and parsing are synchronous. The reader validates XML well-formedness, root/container shapes, required site fields, singleton fields, integer ranges and boolean settings. Missing files, malformed/truncated XML, invalid records and DTD/entity declarations are rejected. Errors identify a site/field or XML location without echoing credential text. This is a supported-field validator, not a complete implementation of every FileZilla schema version.
+```js [JavaScript]
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
 
-`Host`, `Port`, `Protocol` and `Name` are required. Ports must be integers from 1 to 65535. Unknown protocol IDs within the accepted metadata range can be inventoried, but that does not create a connector for them. Supported defaults and ranges are in the [API reference](/reference/site-manager).
+const sites = getSiteManager('C:/Users/example/AppData/Roaming/FileZilla/sitemanager.xml', {
+    includePasswords: false,
+});
+```
+
+```js [MJS]
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+
+const sites = getSiteManager('C:/Users/example/AppData/Roaming/FileZilla/sitemanager.xml', {
+    includePasswords: false,
+});
+```
+
+```js [CommonJS]
+const {getSiteManager} = require('@jalsoedesign/filezilla-core');
+
+const sites = getSiteManager('C:/Users/example/AppData/Roaming/FileZilla/sitemanager.xml', {
+    includePasswords: false,
+});
+```
+
+:::
+
+Use `sites.getServers()` to access the loaded sites, then select or search them as shown in [querying](/guide/querying). Reading the file does not change the XML or open a connection.
 
 ## Automatic location
 
@@ -23,6 +53,14 @@ Reading and parsing are synchronous. The reader validates XML well-formedness, r
 3. `$HOME/.filezilla/sitemanager.xml` for older installations.
 
 It accepts no read options and loads supported passwords by default. Use an explicit path with `includePasswords: false` for inventory.
+
+## XML validation
+
+The reader automatically validates the contents of `sitemanager.xml`. Each saved `<Server>` record must contain `Host`, `Port`, `Protocol` and `Name`. These are fields in the XML, not additional arguments to `getSiteManager()`.
+
+The saved `Port` must be an integer from 1 to 65535. The reader also checks XML well-formedness, root/container shapes, singleton fields, other integer ranges and boolean settings. Missing files, malformed/truncated XML, invalid records and DTD/entity declarations are rejected. Errors identify a site/field or XML location without echoing credential text.
+
+This validates supported fields rather than implementing every FileZilla schema version. Unknown protocol IDs within the accepted metadata range can be inventoried, but that does not create a connector for them. See the [API reference](/reference/site-manager#validation-and-defaults) for supported defaults and ranges, or [import diagnostics](/guide/import-workflows) to inspect rejected records.
 
 ## Credentials and serialization
 

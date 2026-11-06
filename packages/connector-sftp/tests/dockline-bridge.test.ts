@@ -1,11 +1,12 @@
+import * as fileZillaExports from '../src/index.js';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {getSiteManager} from '@jalsoedesign/filezilla-core';
 import {Dockline} from '@jalsoedesign/dockline-core';
-import {SftpConnector as TransferSftpConnector, AuthError as TransferAuthError} from '@jalsoedesign/dockline-sftp-client';
-import {SftpConnector, SftpConnectorFactory, AuthError} from '../src/index.js';
+
+import {SftpConnectorFactory} from '../src/index.js';
 import {createLocalSftp} from './local-sftp.js';
 
 let server: Awaited<ReturnType<typeof createLocalSftp>>;
@@ -66,8 +67,7 @@ describe('FileZilla selected site to Dockline', () => {
         expect(await readFile(localTarget, 'utf8')).toBe('selected site transfer');
     });
 
-    it('keeps existing class and error imports identical to Dockline', () => {
-        expect(SftpConnector).toBe(TransferSftpConnector);
-        expect(AuthError).toBe(TransferAuthError);
+    it('exports only the FileZilla-specific SFTP integration', () => {
+        expect(Object.keys(fileZillaExports).sort()).toEqual(['FileZillaHostKeyStore', 'SftpConnectorFactory']);
     });
 });

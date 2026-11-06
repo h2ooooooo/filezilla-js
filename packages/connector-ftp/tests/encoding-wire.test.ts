@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it} from 'vitest';
 import {createServer, type Server, type Socket} from 'node:net';
 import {Readable} from 'node:stream';
-import {FtpConnector} from '../src/FtpConnector.js';
+import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
 
 const cleanup: Array<() => Promise<void>> = [];
 

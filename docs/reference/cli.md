@@ -2,10 +2,13 @@
 
 `@jalsoedesign/filezilla-cli` searches your saved FileZilla profiles and displays connection details in the terminal. It finds your usual Site Manager file automatically; use `--file` to read another XML file. The `check` command can also test a saved connection.
 
+Search/list/get use the shared `portline-cli` engine through a FileZilla adapter. Package names, commands and native JSON shapes remain compatible. See [shared connection profiles](/development/connection-profiles) for extension points.
+
 ```sh
 filezilla-js --search clientName --show-password
 filezilla-js search 10.2.3.4 --json
 filezilla-js list --file ./sitemanager.xml
+filezilla-js source --file ./sitemanager.xml --json
 filezilla-js list --file ./sitemanager.xml --full
 filezilla-js list --file ./sitemanager.xml --table --full
 filezilla-js list --file ./sitemanager.xml --json --recurse
@@ -13,13 +16,13 @@ filezilla-js get "Production/Web" host --file ./sitemanager.xml
 filezilla-js get --search "unique site" protocolName --file ./sitemanager.xml
 ```
 
-Quote paths/search terms containing spaces. Exact selection uses case-sensitive canonical paths; literal percent/slash within names are escaped as described in [querying](/guide/querying). `get --search` requires exactly one match.
+Quote paths/`search term`s containing spaces. Exact selection uses case-sensitive canonical paths; literal percent/slash within names are escaped as described in [querying](/guide/querying). `get --search` requires exactly one match.
 
 ## Search profiles
 
 `filezilla-js --search <term>` and `filezilla-js search <term>` perform the same all-fields search. Matching is a case-insensitive substring across all loaded property values, the canonical site path and the protocol name. This includes hosts, ports, usernames, loaded passwords, comments, key files and local directories. Remote directories are searched in both encoded and decoded form when decoding is supported.
 
-The default output shows a count and one Label/Value table per match: Name, Path, Protocol, Host, Port, Username, Password, Private key and Remote. The private-key path is shown without `--show-password`; the key file itself is not read. Passwords stay hidden unless `--show-password` is supplied. An unsupported remote directory is shown in its encoded form with a note, without preventing other results from appearing.
+The default output shows a count and one Label/Value table per match: Name, Path, Protocol, Host, Port, Username, Password, Private key and Remote. The private-key path is shown without `--show-password`; the key file itself is not read. Saved passwords display as `(hidden*)` unless `--show-password` is supplied. When any password is hidden, a single footer reads `*Enable passwords with --show-password`, highlighting the flag in green when colors are enabled. Profiles without a password leave that row empty. An unsupported remote directory is shown in its encoded form with a note, without preventing other results from appearing.
 
 `--json` returns an array of profiles with `path`, `name`, `protocol` (display name), `host`, `port`, `user`, `password`, `keyFile` and `remoteDirectory`. `keyFile` is the saved private-key path, or an empty string when none is configured. No matches returns `[]` in JSON or `Found 0 servers` in text, with exit code 0. An empty quoted term matches every profile. `--full` and `--recurse` are list-only options.
 
@@ -29,32 +32,32 @@ The default output shows a count and one Label/Value table per match: Name, Path
 
 | Option | Meaning |
 | --- | --- |
-| --file path | Explicit XML file; otherwise automatic discovery |
-| --search term | All fields without a command; canonical path/site name with list/get |
-| --json | JSON; takes precedence over table |
-| --table | Terminal table |
-| --full | Full properties for plain, table and JSON flat lists |
-| --recurse | Nested list tree; requires JSON |
-| --show-password | Explicitly reveal supported loaded passwords |
-| --help, -h | Help without reading XML |
-| --color, --no-color | The executable sets FORCE_COLOR before command execution; ordinary Chalk environment behavior also applies |
+| `--file path` | Explicit XML file; otherwise automatic discovery |
+| `--search term` | All fields without a command; canonical path/site name with list/get |
+| `--json` | JSON; takes precedence over table |
+| `--table` | Terminal table |
+| `--full` | Full properties for plain, table and JSON flat lists |
+| `--recurse` | Nested list tree; requires JSON |
+| `--show-password` | Explicitly reveal supported loaded passwords |
+| `--help`, `-h` | Help without reading XML |
+| `--color`, `--no-color` | The executable sets `FORCE_COLOR` before command execution; ordinary Chalk environment behavior also applies |
 
 ## Query output
 
 | Invocation | Shape |
 | --- | --- |
-| list | Bulleted canonical paths |
-| list --json | `{path, host, protocol}` array; protocol is display name |
-| list --full | Full key/value records, including protocolName |
-| list --table | Path, Host, Protocol |
-| list --table --full | Path, Property, Value rows |
-| list --json --full | Full properties with numeric protocol and protocolName |
-| list --json --recurse | Root/folders/servers tree; full records |
-| get path | Full key/value properties |
-| get path --json | Full properties plus protocolName |
-| get path host --json | JSON scalar |
+| `list` | Bulleted canonical paths with configured private-key and remote paths |
+| `list --json` | `{path, host, protocol, keyFile, remoteDirectory}` array; protocol is display name |
+| `list --full` | Full key/value records, including `protocolName` |
+| `list --table` | Path, Host, Protocol, Private key, Remote |
+| `list --table --full` | Path, Property, Value rows |
+| `list --json --full` | Full properties with numeric protocol and `protocolName` |
+| `list --json --recurse` | Root/folders/servers tree; full records |
+| `get path` | Full key/value properties |
+| `get path --json` | Full properties plus `protocolName` |
+| `get path host --json` | JSON scalar |
 
-Full list/get output decodes remoteDirectory, so an unsupported saved path can still reject full/path output. Compact lists, host/name queries and list/get searches do not decode it. Profile search attempts decoding and falls back to the encoded value. R2 displays as CLOUDFLARE_R2. Passwords are `(hidden)` unless explicitly requested; query commands load credentials before masking them. The check command requests only its selected credential.
+Full list/get output decodes `remoteDirectory`, so an unsupported saved path can still reject full/path output. Compact lists and profile search attempt decoding and fall back to the encoded value with a note. Host/name queries and list/get searches do not decode it. R2 displays as CLOUDFLARE_R2. Passwords in JSON and list/get output are `(hidden)` unless explicitly requested; text search uses `(hidden*)` and the footer described above. Query commands load credentials before masking them. The check command requests only its selected credential.
 
 ## Query errors and automation
 
@@ -71,3 +74,5 @@ The exported `run(): Promise<void>` reads process arguments, writes the console 
 `--directory` requests a metadata check; `--include-listing` requests a shallow listing bounded by `--max-entries`. `--timeout-ms` covers credentials and network work. Unlike legacy query parsing, check rejects unknown/invalid flags and writes versioned JSON outcomes to stdout with documented status-specific exit codes. It does not accept query-only flags such as `--show-password`, `--table`, `--search` or color flags.
 
 The package also exports `checkConnection(server, options): Promise<ConnectionCheckResult>` and its option/result types. See [connection checks](/guide/connection-check) for the complete flags, security boundary, cleanup state and exit-code table. Packaged [transfer recipes](/guide/transfer-recipes) are executable source examples; they are not CLI transfer commands.
+
+See [complete command inputs](/reference/cli-help) and [captured terminal/JSON output](/reference/cli-output).

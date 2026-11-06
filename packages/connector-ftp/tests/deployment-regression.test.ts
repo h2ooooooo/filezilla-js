@@ -1,8 +1,8 @@
 import {describe, it, expect} from 'vitest';
 import {Readable, Writable} from 'node:stream';
-import {FtpConnector} from '../src/FtpConnector.js';
+import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
 import {FTPError} from 'basic-ftp';
-import {NotFoundError, PermissionError} from '../src/errors.js';
+import {NotFoundError, PermissionError} from '@jalsoedesign/dockline-abstract';
 
 describe('deployment transport regressions', () => {
     it('does not report a completed read before the final control response', async () => {

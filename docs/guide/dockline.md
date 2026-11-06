@@ -1,30 +1,64 @@
 # Dockline and FileZilla JS
 
-The transfer implementation is provided by the independent [**h2ooooooo/Dockline** monorepo](https://github.com/h2ooooooo/Dockline). FileZilla JS reads saved configuration and maps a selected site into ordinary Dockline connection settings. Dockline has no dependency on FileZilla models, XML, factories or configuration readers.
+The import example is reference code, not a runnable connection program. For complete setup, filenames, run commands and output, use [the saved-site walkthrough](/guide/quick-start).
 
-| Repository | Owns |
+FileZilla JS interprets FileZilla settings. Dockline opens connections and transfers data. Portline supplies application-independent profiles, discovery contracts, queries and guarded native writes.
+
+| Layer | Owns |
 | --- | --- |
-| FileZilla JS | Site Manager reading, selection, credential decoding, metadata identities/snapshots, FileZilla protocol mapping, read-only FileZilla host-key import and query/check CLI |
-| Dockline | FTP/FTPS/SFTP connections, authentication and trust callbacks, streams, local file convenience methods, errors, retries, progress, bandwidth, pools, publication, checksums, copy, traversal and managed known hosts |
+| FileZilla core | Site Manager reading, native `Server` models, credential decoding, metadata identity/snapshots, `FileZillaProfileSource` and the `createFileZillaWriter` factory |
+| FileZilla integration | Saved protocol/authentication/path mapping through `FtpConnectorFactory` and `SftpConnectorFactory`; FileZilla numeric-protocol registry; read-only `hostkeys.xml` import |
+| Portline | Normalized profile and credential contracts, shared queries/CLIs, discovery infrastructure, preview/sync/apply policy, native lock/process checks and backups |
+| Dockline | FTP/FTPS/SFTP transports, SSH command execution, trust/authentication callbacks, transfers, errors, pools and managed known hosts |
+| dockline-keys | Key inspection, fingerprints, public-key extraction and encrypted OpenSSH/PPK/PEM conversion |
 
-## Independently installable packages
+Dockline does not import FileZilla models or settings readers. Application readers remain in separate repositories.
 
-| Package | Owns | Runtime dependency boundary |
-| --- | --- | --- |
-| `@jalsoedesign/dockline-abstract` | Shared configuration, errors, transfer contracts, pools and stream utilities | No FTP or SFTP client |
-| `@jalsoedesign/dockline-core` | Shared SDK and protocol selection | Abstract only; detects the installed protocol package on use |
-| `@jalsoedesign/dockline-ftp-client` | FTP/FTPS connector, encoding and TLS behavior | Abstract and FTP dependencies; no SSH client |
-| `@jalsoedesign/dockline-sftp-client` | SFTP connector, authentication and managed known hosts | Abstract and SSH dependencies; no FTP client |
+## Choose an import
 
-FileZilla's abstract, FTP and SFTP bridges depend on the corresponding Dockline package. Selecting one bridge does not install the other protocol. The CLI intentionally supports both protocols. Add `@jalsoedesign/dockline-core` separately when you want `Dockline.withConnection` or local-file convenience methods; a missing selected client produces an actionable installation error.
+For a generic connection, import Dockline directly:
 
-The fifth package, `@jalsoedesign/dockline-cli`, is an optional standalone command-line utility for download, upload, list and remove. It uses YAML connection configuration and independently installed protocol clients. It is not a dependency of FileZilla bridges or the FileZilla CLI; FileZilla's CLI retains its saved-site list/get/check workflow.
+::: code-group
 
-## Simple connection configuration
+```ts [TypeScript]
+import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {KnownHostsStore} from '@jalsoedesign/dockline-sftp-client';
+import {AuthError, ConnectorPool} from '@jalsoedesign/dockline-abstract';
+```
 
-Both concrete FileZilla factories expose static and instance `toConfig(server, options?)` methods. They do not connect, prompt or change the saved configuration. They return a plain `FtpTransferConfig` or `SftpTransferConfig`, accepted by `Dockline.create`, `Dockline.connect` and `Dockline.withConnection`.
+```js [JavaScript]
+import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {KnownHostsStore} from '@jalsoedesign/dockline-sftp-client';
+import {AuthError, ConnectorPool} from '@jalsoedesign/dockline-abstract';
+```
 
-`username` and `root` are the common fields. FTP's internal `user`, `secure` and `initialPath` become the shared names and protocol discriminator; SFTP's `initialPath` becomes `root`. Existing trust, credential-provider, timeout, retry, filename and TLS options survive conversion. The returned object may intentionally contain credentials and callbacks; do not log or serialize it as metadata.
+```js [MJS]
+import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import {KnownHostsStore} from '@jalsoedesign/dockline-sftp-client';
+import {AuthError, ConnectorPool} from '@jalsoedesign/dockline-abstract';
+```
+
+```js [CommonJS]
+const {SftpConnector} = require('@jalsoedesign/dockline-sftp-client');
+const {KnownHostsStore} = require('@jalsoedesign/dockline-sftp-client');
+const {AuthError, ConnectorPool} = require('@jalsoedesign/dockline-abstract');
+```
+
+:::
+
+These classes are not exported by FileZilla's connector packages. FileZilla does not add authentication, key parsing or transfer features to a directly constructed Dockline connector. `siteId` in a Dockline credential callback is an application-supplied identifier; it does not load a FileZilla site.
+
+For a saved FileZilla site, use the [complete quick start](/guide/quick-start). It reads the selected site, calls `SftpConnectorFactory.toConfig(site, options)` or `FtpConnectorFactory.toConfig(site, options)`, and gives the result to `Dockline.withConnection`.
+
+| FileZilla package | Public integration exports |
+| --- | --- |
+| `filezilla-connector-abstract` | `ConnectorFactory`, `ConnectorRegistry`, `RegisteredProvider`, `Registration` |
+| `filezilla-connector-ftp` | `FtpConnectorFactory`, `FtpConnectorFactoryOptions` |
+| `filezilla-connector-sftp` | `SftpConnectorFactory`, `SftpConnectorFactoryOptions`, `FileZillaHostKeyStore` |
+
+The two `fromServer` factory methods remain useful: they translate FileZilla settings and return disconnected Dockline adapters. `toConfig` returns ordinary Dockline configuration without opening a connection. Both static and instance methods are supported.
+
+## Saved protocol mapping
 
 | Saved FileZilla protocol | Dockline protocol |
 | --- | --- |
@@ -33,19 +67,18 @@ Both concrete FileZilla factories expose static and instance `toConfig(server, o
 | INSECURE_FTP | `ftp` |
 | SFTP | `sftp` |
 
-The [quick start](/guide/quick-start) loads a selected site's credential, maps its configuration, connects and transfers one local file. The root is a starting directory, not a confinement boundary. Remote permissions and server capabilities still determine which guarantees are possible.
+Factories map saved host, port, account, authentication mode, key path and initial directory. FTP additionally maps passive mode, TLS and filename encoding. Unsupported saved logon modes are refused rather than guessed. Credential and trust overrides remain explicit. Returned connection configuration may contain credentials and callbacks; do not log it as metadata.
 
-## Existing integrations remain supported
+## Migrate transport imports
 
-`FtpConnectorFactory.fromServer` and `SftpConnectorFactory.fromServer` still create disconnected adapters. Existing connector packages re-export the actual Dockline classes and errors, preserving class identity and `instanceof` checks within one compatible installed dependency tree. There is no second transport implementation to maintain.
+The connector packages' major release removes generic passthrough exports and their `dist/*` entry points. Import generic errors, configuration types, pools, progress/bandwidth and transfer helpers from `@jalsoedesign/dockline-abstract`. Import `FtpConnector` and FTP-specific types from `@jalsoedesign/dockline-ftp-client`; import `SftpConnector`, SFTP-specific types and `KnownHostsStore` from `@jalsoedesign/dockline-sftp-client`.
 
-The FileZilla `ConnectorFactory`, numeric-protocol `ConnectorRegistry`, concrete settings factories and `FileZillaHostKeyStore` remain here because they understand FileZilla data. Generic `KnownHostsStore` belongs to Dockline. The compatibility imports in the older transfer guides remain valid and describe the same implementation. New applications without FileZilla configuration should import Dockline directly.
+FileZilla factory/registry APIs and the FileZilla host-key importer remain available. Check the [exact public signatures](/reference/types) for the complete current FileZilla API. Keep compatible Dockline dependencies aligned so applications and factories resolve the same error constructors.
 
-The CLI retains `list`, `get` and the opt-in read-only `check` command. That command uses the FileZilla mapping layer and Dockline transport. Standalone transfers are available through the Dockline CLI.
+## Reads, guarded writes and execution
 
-## Scope and known limits
+Legacy `SiteManager`/`Server` reads and in-memory edits do not save XML. Explicit native changes use `createFileZillaWriter` and the separate [preview/apply workflow](/development/profile-writing). It preserves unrelated settings and checks locks, process state and revision before applying. `FileZillaHostKeyStore` remains a read-only snapshot; approvals are persisted through the caller's chosen trust store.
 
-Saved Site Manager XML and FileZilla's host-key file remain read-only. There is no new XML writer. Identity JSON export and managed Dockline trust persistence are separate APIs with their existing ownership rules.
+The `filezilla-js` CLI provides search/list/get/source, connection checks and explicit write/sync/apply/status commands. The Dockline CLI provides upload/download/list/remove from connection configuration. SSH execution and key conversion are SDK APIs; they are not extra Dockline CLI subcommands. Profile sync copies supported normalized metadata, not stored secrets, private-key contents or trust approvals.
 
-
-See the [Dockline documentation](https://h2ooooooo.github.io/dockline/) for generic transfer APIs, protocol configuration and guarantees.
+See [Dockline's package guide](https://h2ooooooo.github.io/dockline/guide/packages) and [key utilities](https://h2ooooooo.github.io/dockline/keys/) for transport and key APIs.

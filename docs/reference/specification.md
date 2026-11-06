@@ -2,7 +2,7 @@
 
 ## Repository and configuration boundary
 
-FileZilla core owns reading and metadata. FileZilla factories own conversion to plain Dockline configuration and retain the old disconnected-adapter API. Dockline owns the actual protocol implementation and generic transfer tools; compatibility exports share its class/error identity. XML write-back remains outside the API.
+FileZilla core owns reading and metadata. FileZilla factories own conversion to plain Dockline configuration and retain the old disconnected-adapter API. Dockline owns the protocol implementation and generic transfer tools. FileZilla exports only its native settings integration; explicit native XML changes use the separate guarded Portline writer factory.
 
 ## Reading and selecting
 
@@ -18,19 +18,19 @@ FileZilla core owns reading and metadata. FileZilla factories own conversion to 
 - Factories support static/instance methods with options and return disconnected adapters.
 - FTP 0/4 require explicit TLS, 3 implicit TLS and 6 plaintext. Active FTP remains unsupported.
 - SFTP accepts password, key, explicit agent and string/callback keyboard-interactive authentication, plus credential providers, raw-key verification and optional required has/accept trust callbacks.
-- Site settings alone are not host trust. The modern FileZilla importer remains read-only. Optional KnownHostsStore persistence requires explicit first-use/changed-key approval; the library never silently accepts a newly observed key.
-- Unconfigured SFTP compatibility behavior still accepts keys because requireTrustPolicy is opt-in.
-- FTP queues full operations; SFTP coalesces connection setup and tracks active lifetimes. A separate ConnectorPool bounds all leased sessions, including metadata and directory work.
+- Site settings alone are not host trust. The modern FileZilla importer remains read-only. Optional `KnownHostsStore` persistence requires explicit first-use/changed-key approval; the library never silently accepts a newly observed key.
+- Unconfigured SFTP compatibility behavior still accepts keys because `requireTrustPolicy` is opt-in.
+- FTP queues full operations; SFTP coalesces connection setup and tracks active lifetimes. A separate `ConnectorPool` bounds all leased sessions, including metadata and directory work.
 
 ## Transfer and recovery
 
 - Upload completion is its returned promise. Failures may leave partial remote files.
 - Reads return early and must be consumed. FTP also waits for final control confirmation; SFTP closes its source on cancellation and preserves mapped errors.
-- Per-attempt deadlines and abort signals are honored. autoReconnect defaults false; maxTransientRetries defaults to three extra eligible attempts.
+- Per-attempt deadlines and abort signals are honored. `autoReconnect` defaults false; `maxTransientRetries` defaults to three extra eligible attempts.
 - Fresh upload factories permit full overwriting replay under explicit reconnection policy. One-shot uploads, returned reads and started mutations are not universally replayed.
 - FTP mkdir restores CWD or invalidates the session. Directory create/delete recurse; rename/copy semantics remain server-dependent.
 - Copy strategies are explicit, defaulting to bounded same-session client streaming with local disk staging. Checksums default to server-only, with explicit streamed fallback. Visibility/URL/MIME operations remain unsupported.
-- SFTP timestamps use modifyTime in milliseconds; timestamp zero is valid. Some FTP metadata can be absent.
+- SFTP timestamps use `modifyTime` in milliseconds; timestamp zero is valid. Some FTP metadata can be absent.
 
 ## Remaining boundaries
 

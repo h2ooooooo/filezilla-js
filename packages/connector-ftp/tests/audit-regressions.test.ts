@@ -1,11 +1,11 @@
 import {describe, expect, it, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
 import {FTPError} from 'basic-ftp';
-import {AuthError as SharedAuthError, ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
 import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {FtpConnector} from '../src/FtpConnector.js';
-import {FtpConnectorFactory} from '../src/FtpConnectorFactory.js';
-import {AuthError, PermissionError, OperationAbortedError, OperationTimeoutError, ConnectionClosedError} from '../src/errors.js';
+import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
+import {FtpConnectorFactory} from '../src/index.js';
+import {AuthError, PermissionError, OperationAbortedError, OperationTimeoutError, ConnectionClosedError} from '@jalsoedesign/dockline-abstract';
 
 const config = {
     host: 'unused',
@@ -452,12 +452,7 @@ describe('FTP stream lifetime owns the command queue', () => {
     });
 });
 
-describe('FTP shared API identity', () => {
-    it('re-exports the exact shared runtime error constructors', () => {
-        expect(new AuthError('Rejected')).toBeInstanceOf(SharedAuthError);
-        expect(AuthError).toBe(SharedAuthError);
-    });
-
+describe('FileZilla FTP factory integration', () => {
     it('supports both factory forms and forwards connection/operation options', () => {
         const server = new Server({
             host: 'fixture',

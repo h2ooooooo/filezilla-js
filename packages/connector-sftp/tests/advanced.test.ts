@@ -1,8 +1,8 @@
 import {afterAll, afterEach, beforeAll, describe, expect, it} from 'vitest';
 import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
-import {NotSupportedError, PublicationError} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector} from '../src/SftpConnector.js';
+import {NotSupportedError, PublicationError} from '@jalsoedesign/dockline-abstract';
+import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
 import {createLocalSftp} from './local-sftp.js';
 
 let server: Awaited<ReturnType<typeof createLocalSftp>>;

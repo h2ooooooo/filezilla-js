@@ -30,9 +30,9 @@ new SiteManager(xml: XmlConfig, options?: SiteManagerReadOptions)
 | `getServers()` | Server[] | Live flat array; treat as read-only unless deliberately editing memory |
 | `getServerByPath(path)` | Server or null | Exact case-sensitive canonical selection |
 | `searchServers(term, options?)` | Server[] | Case-insensitive name/path substring; `{fields: 'all'}` includes all loaded values and decoded remote paths |
-| `getServersTree(servers?)` | ServerTree | Rebuild nonempty hierarchy from all or selected records |
+| `getServersTree(servers?)` | `ServerTree` | Rebuild nonempty hierarchy from all or selected records |
 | `toJSON()` | `{servers: metadata[]}` | Password-redacted records, retaining raw encoded remote-directory metadata |
-| `importDiagnostics` | readonly SiteImportDiagnostic[] | Redacted structural locations and error/warning codes |
+| `importDiagnostics` | readonly `SiteImportDiagnostic`[] | Redacted structural locations and error/warning codes |
 | `rejectedCount` | number | Excluded site records, including rejected folder descendants |
 
 Singleton/array `Server` and `Folder` collections are normalized recursively. Raw XML is not retained. Strict mode rejects duplicate canonical identities before any selected credential decoding; tolerant mode excludes every record at each duplicate path. Identity components escape `%` as `%25` and `/` as `%2F`; decoded names and credential selection use the same identity computation.
@@ -50,7 +50,7 @@ File reading validates XML well-formedness before parsing and rejects DTD/entity
 | Logontype | Integer 0–7, default 0 |
 | TimezoneOffset | Safe integer, default 0 |
 | MaximumMultipleConnections | Non-negative safe integer, default 0 |
-| PasvMode | 0–2 or known textual aliases, default 0 |
+| `PasvMode` | 0–2 or known textual aliases, default 0 |
 | EncodingType | 0–2 or known textual aliases, default 2 |
 | BypassProxy, SyncBrowsing, DirectoryComparison | Boolean/0/1 values; default false |
 
@@ -70,7 +70,7 @@ interface ServerTree extends ServerFolderNode {
 }
 ```
 
-The reader is synchronous. Strict mode throws errors with field/site or XML-location context. Tolerant mode returns independent valid sites and redacted diagnostics; malformed documents and unsafe declarations remain fatal. Search does not decode remote directories; explicit path decoding remains strict. Configurable parsing resource budgets and XML write-back are not provided, and existing manager arrays/properties remain mutable.
+The reader is synchronous. Strict mode throws errors with field/site or XML-location context. Tolerant mode returns independent valid sites and redacted diagnostics; malformed documents and unsafe declarations remain fatal. Search does not decode remote directories; explicit path decoding remains strict. Configurable parser budgets and a save method are not part of the legacy reader. Existing manager arrays/properties remain mutable; changes are not persisted. Explicit native writes use `createFileZillaWriter` with the separate guarded preview/apply workflow.
 
 ## Import reports, stable IDs and snapshots
 

@@ -1,118 +1,445 @@
-# Quick start
+# Connect a saved FileZilla site
 
-FileZilla JS supplies saved-site configuration. [Dockline](/guide/dockline) connects and transfers through a shared API. For the npm packages used by these examples, see [installation](/guide/installation). Importing or mapping a site does not open a connection.
+FileZilla JS supplies saved-site configuration; Dockline connects and transfers. Start with [the metadata-only quick start](/api/quick-start) if only reading settings. These complete programs deliberately connect and write one remote file.
 
 ## Load saved sites
 
-`getSiteManager` accepts an explicit Site Manager path. An explicit path lets you control credential loading. The legacy `getDefaultSiteManager()` convenience function takes no options and includes supported saved credentials by default.
-
-```ts
-import {getSiteManager} from '@jalsoedesign/filezilla-core';
-
-const manager = getSiteManager('./sitemanager.xml', {
-    includePasswords: false,
-});
-
-for (const site of manager.getServers()) {
-    console.log(site.path, site.properties.host, site.siteProtocolName);
-}
-
-const selected = manager.getServerByPath('Production/Web');
-
-if (!selected) {
-    throw new Error('The selected site does not exist.');
-}
-```
-
-Exact paths are case-sensitive. Search is case-insensitive and may return multiple sites. Copy the returned `site.path` when retaining a selection; literal slashes and percent signs in names are encoded as `%2F` and `%25`. Metadata reads leave passwords unloaded and do not decode unrelated remote-directory values.
+Use an explicit XML path and a canonical selection returned by `manager.getServers()`. The [reader program](/api/quick-start) shows all four language variants. Exact selection is case-sensitive; search may return multiple records. Only the selected path receives supported saved credentials when `credentialPath` is set.
 
 ## Load one SFTP site, connect and upload one file
 
-Install `@jalsoedesign/filezilla-core`, `@jalsoedesign/filezilla-connector-sftp` and `@jalsoedesign/dockline-core` from npm. The SFTP bridge brings `@jalsoedesign/dockline-sftp-client`; FTP dependencies are unnecessary for this example.
+```sh
+npm install @jalsoedesign/filezilla-core @jalsoedesign/filezilla-connector-sftp @jalsoedesign/dockline-core
+```
 
-This complete example loads supported credentials for only `Production/Web`, converts the saved SFTP configuration, verifies the host key against an independently obtained fingerprint, and uploads one local file. The remote filename is relative to the saved starting directory.
+Use an existing SFTP site named `Production/Web` with saved normal/password or key-file authentication. Create `hello.txt` on the host. The server's saved starting directory must exist and allow writes. The metadata-only `Demo` fixture does not supply a server or credentials. Ask/interactive modes require [explicit credential handlers](/guide/ssh-options).
 
-```ts
+Supply an independently verified host fingerprint in the same terminal:
+
+::: code-group
+
+```powershell [PowerShell]
+$env:SFTP_HOST_FINGERPRINT = "SHA256:your-verified-server-fingerprint"
+```
+
+```sh [macOS / Linux]
+export SFTP_HOST_FINGERPRINT="SHA256:your-verified-server-fingerprint"
+```
+
+:::
+
+For an encrypted saved private key, also supply `SFTP_KEY_PASSPHRASE` through the environment or replace that input with a secret-provider integration. Dockline reads supported OpenSSH, PPK v2/v3 and PEM key contents in memory.
+
+Save `saved-sftp.ts` by default, or the filename in the selected language tab. Download: <a href="/examples/saved-sftp.ts" download="saved-sftp.ts">TypeScript</a> · <a href="/examples/saved-sftp.js" download="saved-sftp.js">JavaScript</a> · <a href="/examples/saved-sftp.mjs" download="saved-sftp.mjs">MJS</a> · <a href="/examples/saved-sftp.cjs" download="saved-sftp.cjs">CommonJS</a>
+
+::: code-group
+
+```ts [TypeScript]
+// saved-sftp.ts
 import {getSiteManager} from '@jalsoedesign/filezilla-core';
 import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
 import {Dockline} from '@jalsoedesign/dockline-core';
 
-const selectedPath = 'Production/Web';
-const manager = getSiteManager('./sitemanager.xml', {
-    credentialPath: selectedPath,
-});
+const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
 const site = manager.getServerByPath(selectedPath);
-const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
 
 if (!site) {
-    throw new Error('The selected site does not exist.');
+    throw new Error('The selected saved site is unavailable.');
 }
+
+const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
 
 if (!fingerprint) {
     throw new Error('Set SFTP_HOST_FINGERPRINT to an independently verified SHA256 fingerprint.');
 }
 
 const config = SftpConnectorFactory.toConfig(site, {
+    passphrase: process.env.SFTP_KEY_PASSPHRASE,
     requireTrustPolicy: true,
-    hasTrustPolicy: challenge => challenge.fingerprint === fingerprint,
+    hasTrustPolicy: challenge => (
+        challenge.host === site.properties.host &&
+        challenge.port === site.properties.port &&
+        challenge.fingerprint === fingerprint
+    ),
     acceptTrustPolicy: () => false,
 });
 
 await Dockline.withConnection(config, async remote => {
-    await remote.uploadFile('./dist/index.html', 'index.html');
+    // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+    await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+    console.log('Uploaded dockline-hello.txt.');
+
+    // Download server source 'dockline-hello.txt'
+    // to host destination './downloaded-hello.txt'.
+    await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+    console.log('Downloaded downloaded-hello.txt.');
+});
+
+console.log('Connection closed.');
+```
+
+```js [JavaScript]
+// saved-sftp.js
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {Dockline} from '@jalsoedesign/dockline-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site) {
+    throw new Error('The selected saved site is unavailable.');
+}
+
+const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+
+if (!fingerprint) {
+    throw new Error('Set SFTP_HOST_FINGERPRINT to an independently verified SHA256 fingerprint.');
+}
+
+const config = SftpConnectorFactory.toConfig(site, {
+    passphrase: process.env.SFTP_KEY_PASSPHRASE,
+    requireTrustPolicy: true,
+    hasTrustPolicy: challenge => (
+        challenge.host === site.properties.host &&
+        challenge.port === site.properties.port &&
+        challenge.fingerprint === fingerprint
+    ),
+    acceptTrustPolicy: () => false,
+});
+
+await Dockline.withConnection(config, async remote => {
+    // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+    await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+    console.log('Uploaded dockline-hello.txt.');
+
+    // Download server source 'dockline-hello.txt'
+    // to host destination './downloaded-hello.txt'.
+    await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+    console.log('Downloaded downloaded-hello.txt.');
+});
+
+console.log('Connection closed.');
+```
+
+```js [MJS]
+// saved-sftp.mjs
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {Dockline} from '@jalsoedesign/dockline-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site) {
+    throw new Error('The selected saved site is unavailable.');
+}
+
+const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+
+if (!fingerprint) {
+    throw new Error('Set SFTP_HOST_FINGERPRINT to an independently verified SHA256 fingerprint.');
+}
+
+const config = SftpConnectorFactory.toConfig(site, {
+    passphrase: process.env.SFTP_KEY_PASSPHRASE,
+    requireTrustPolicy: true,
+    hasTrustPolicy: challenge => (
+        challenge.host === site.properties.host &&
+        challenge.port === site.properties.port &&
+        challenge.fingerprint === fingerprint
+    ),
+    acceptTrustPolicy: () => false,
+});
+
+await Dockline.withConnection(config, async remote => {
+    // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+    await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+    console.log('Uploaded dockline-hello.txt.');
+
+    // Download server source 'dockline-hello.txt'
+    // to host destination './downloaded-hello.txt'.
+    await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+    console.log('Downloaded downloaded-hello.txt.');
+});
+
+console.log('Connection closed.');
+```
+
+```js [CommonJS]
+// saved-sftp.cjs
+const {getSiteManager} = require('@jalsoedesign/filezilla-core');
+const {SftpConnectorFactory} = require('@jalsoedesign/filezilla-connector-sftp');
+const {Dockline} = require('@jalsoedesign/dockline-core');
+
+async function main() {
+    const [filename = './sitemanager.xml', selectedPath = 'Production/Web'] = process.argv.slice(2);
+    const manager = getSiteManager(filename, {credentialPath: selectedPath});
+    const site = manager.getServerByPath(selectedPath);
+
+    if (!site) {
+        throw new Error('The selected saved site is unavailable.');
+    }
+
+    const fingerprint = process.env.SFTP_HOST_FINGERPRINT;
+
+    if (!fingerprint) {
+        throw new Error('Set SFTP_HOST_FINGERPRINT to an independently verified SHA256 fingerprint.');
+    }
+
+    const config = SftpConnectorFactory.toConfig(site, {
+        passphrase: process.env.SFTP_KEY_PASSPHRASE,
+        requireTrustPolicy: true,
+        hasTrustPolicy: challenge => (
+            challenge.host === site.properties.host &&
+            challenge.port === site.properties.port &&
+            challenge.fingerprint === fingerprint
+        ),
+        acceptTrustPolicy: () => false,
+    });
+
+    await Dockline.withConnection(config, async remote => {
+        // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+        await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+        console.log('Uploaded dockline-hello.txt.');
+
+        // Download server source 'dockline-hello.txt'
+        // to host destination './downloaded-hello.txt'.
+        await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+        console.log('Downloaded downloaded-hello.txt.');
+    });
+
+    console.log('Connection closed.');
+}
+
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
 });
 ```
 
-`withConnection` connects and closes the session when the callback settles, including on failure. `uploadFile` opens and consumes the local file; no stream plumbing is needed. Ordinary uploads replace an existing remote file by default. Pass `overwrite: 'fail'` to request supported no-replace publication; FTP cannot offer that portable guarantee. Downloads fail if the local destination exists unless replacement is explicitly selected. Unsupported server guarantees still produce typed errors; a shared API does not create capabilities a server lacks.
+:::
 
-For saved ask/interactive modes, provide an explicit credential provider or the supported interactive option instead of assuming the reader can retrieve an unsaved password. [SFTP authentication and trust](/guide/sftp) covers key files, agents, prompts and the read-only FileZilla trust importer. Configuration returned by `toConfig` may contain credentials; avoid logging it.
+### Run
+
+::: code-group
+
+```sh [TypeScript]
+npm install --save-dev typescript tsx @types/node
+npm pkg set type=module
+npx tsx saved-sftp.ts ./sitemanager.xml Production/Web
+```
+
+```sh [JavaScript]
+npm pkg set type=module
+node saved-sftp.js ./sitemanager.xml Production/Web
+```
+
+```sh [MJS]
+node saved-sftp.mjs ./sitemanager.xml Production/Web
+```
+
+```sh [CommonJS]
+node saved-sftp.cjs ./sitemanager.xml Production/Web
+```
+
+:::
+
+### Output
+
+```text
+Uploaded dockline-hello.txt.
+Downloaded downloaded-hello.txt.
+Connection closed.
+```
 
 ## Download one file
 
-Use the same connection configuration. Remote paths come first for downloads; local paths come first for uploads.
+The program uploads host source `./hello.txt` to server destination `dockline-hello.txt`, relative to the saved remote root. It then downloads that server file to host destination `./downloaded-hello.txt`. Both methods await completion; `withConnection` closes the session even if work fails.
 
-```ts
-await Dockline.withConnection(config, async remote => {
-    await remote.downloadFile('logs/latest.log', './latest.log');
-});
-```
-
-Both local file methods await full completion. Use the lower-level connector APIs for streams, pools or server-aware publication policies. [Transfer guarantees](/guide/advanced-transfers) explains explicit overwrite, integrity checks and uncertain final rename outcomes.
+Uploads replace an existing remote destination by default. Downloads refuse an existing local destination; choose a new filename or deliberately select `{overwrite: 'replace'}` before rerunning. Both parent directories must already exist. See [Dockline's file recipes](https://h2ooooooo.github.io/dockline/api/files) for further operations.
 
 ## Connect through a saved FTP or FTPS configuration
 
-Use `@jalsoedesign/filezilla-connector-ftp` with `@jalsoedesign/filezilla-core` and `@jalsoedesign/dockline-core`. The FTP bridge brings `@jalsoedesign/dockline-ftp-client`; SFTP dependencies are unnecessary.
+```sh
+npm install @jalsoedesign/filezilla-core @jalsoedesign/filezilla-connector-ftp @jalsoedesign/dockline-core
+```
 
-`toConfig` preserves FileZilla's TLS meaning: saved FTP/FTPES require explicit TLS, FTPS uses implicit TLS, and INSECURE_FTP selects plaintext. No protocol choice is inferred from the port alone.
+Select an existing `Production/FTP` site and the same host input file. FileZilla FTP/FTPES require explicit TLS, FTPS uses implicit TLS, and INSECURE_FTP explicitly selects plaintext. The saved port is retained; no TLS policy is inferred from it. Certificate verification remains enabled.
 
-```ts
+Save `saved-ftp.ts` by default, or the filename in the selected language tab. Download: <a href="/examples/saved-ftp.ts" download="saved-ftp.ts">TypeScript</a> · <a href="/examples/saved-ftp.js" download="saved-ftp.js">JavaScript</a> · <a href="/examples/saved-ftp.mjs" download="saved-ftp.mjs">MJS</a> · <a href="/examples/saved-ftp.cjs" download="saved-ftp.cjs">CommonJS</a>
+
+::: code-group
+
+```ts [TypeScript]
+// saved-ftp.ts
 import {getSiteManager} from '@jalsoedesign/filezilla-core';
 import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
 import {Dockline} from '@jalsoedesign/dockline-core';
 
-const selectedPath = 'Production/FTP';
-const manager = getSiteManager('./sitemanager.xml', {
-    credentialPath: selectedPath,
-});
+const [filename = './sitemanager.xml', selectedPath = 'Production/FTP'] = process.argv.slice(2);
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
 const site = manager.getServerByPath(selectedPath);
 
 if (!site) {
-    throw new Error('The selected site does not exist.');
+    throw new Error('The selected saved site is unavailable.');
 }
 
 const config = FtpConnectorFactory.toConfig(site);
 
 await Dockline.withConnection(config, async remote => {
-    await remote.uploadFile('./dist/index.html', 'index.html', {
-        overwrite: 'replace',
+    // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+    await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+    console.log('Uploaded dockline-hello.txt.');
+
+    // Download server source 'dockline-hello.txt'
+    // to host destination './downloaded-hello.txt'.
+    await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+    console.log('Downloaded downloaded-hello.txt.');
+});
+
+console.log('Connection closed.');
+```
+
+```js [JavaScript]
+// saved-ftp.js
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
+import {Dockline} from '@jalsoedesign/dockline-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/FTP'] = process.argv.slice(2);
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site) {
+    throw new Error('The selected saved site is unavailable.');
+}
+
+const config = FtpConnectorFactory.toConfig(site);
+
+await Dockline.withConnection(config, async remote => {
+    // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+    await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+    console.log('Uploaded dockline-hello.txt.');
+
+    // Download server source 'dockline-hello.txt'
+    // to host destination './downloaded-hello.txt'.
+    await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+    console.log('Downloaded downloaded-hello.txt.');
+});
+
+console.log('Connection closed.');
+```
+
+```js [MJS]
+// saved-ftp.mjs
+import {getSiteManager} from '@jalsoedesign/filezilla-core';
+import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
+import {Dockline} from '@jalsoedesign/dockline-core';
+
+const [filename = './sitemanager.xml', selectedPath = 'Production/FTP'] = process.argv.slice(2);
+const manager = getSiteManager(filename, {credentialPath: selectedPath});
+const site = manager.getServerByPath(selectedPath);
+
+if (!site) {
+    throw new Error('The selected saved site is unavailable.');
+}
+
+const config = FtpConnectorFactory.toConfig(site);
+
+await Dockline.withConnection(config, async remote => {
+    // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+    await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+    console.log('Uploaded dockline-hello.txt.');
+
+    // Download server source 'dockline-hello.txt'
+    // to host destination './downloaded-hello.txt'.
+    await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+    console.log('Downloaded downloaded-hello.txt.');
+});
+
+console.log('Connection closed.');
+```
+
+```js [CommonJS]
+// saved-ftp.cjs
+const {getSiteManager} = require('@jalsoedesign/filezilla-core');
+const {FtpConnectorFactory} = require('@jalsoedesign/filezilla-connector-ftp');
+const {Dockline} = require('@jalsoedesign/dockline-core');
+
+async function main() {
+    const [filename = './sitemanager.xml', selectedPath = 'Production/FTP'] = process.argv.slice(2);
+    const manager = getSiteManager(filename, {credentialPath: selectedPath});
+    const site = manager.getServerByPath(selectedPath);
+
+    if (!site) {
+        throw new Error('The selected saved site is unavailable.');
+    }
+
+    const config = FtpConnectorFactory.toConfig(site);
+
+    await Dockline.withConnection(config, async remote => {
+        // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
+        await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
+        console.log('Uploaded dockline-hello.txt.');
+
+        // Download server source 'dockline-hello.txt'
+        // to host destination './downloaded-hello.txt'.
+        await remote.downloadFile('dockline-hello.txt', './downloaded-hello.txt');
+        console.log('Downloaded downloaded-hello.txt.');
     });
+
+    console.log('Connection closed.');
+}
+
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
 });
 ```
 
-FTP servers cannot provide every portable no-clobber or atomic publication guarantee. This example explicitly permits replacement. Keep TLS certificate validation enabled; [FTP options](/guide/ftp-options) covers custom CAs, passive mode, encoding and keepalives.
+:::
+
+### Run
+
+::: code-group
+
+```sh [TypeScript]
+npm install --save-dev typescript tsx @types/node
+npm pkg set type=module
+npx tsx saved-ftp.ts ./sitemanager.xml Production/FTP
+```
+
+```sh [JavaScript]
+npm pkg set type=module
+node saved-ftp.js ./sitemanager.xml Production/FTP
+```
+
+```sh [MJS]
+node saved-ftp.mjs ./sitemanager.xml Production/FTP
+```
+
+```sh [CommonJS]
+node saved-ftp.cjs ./sitemanager.xml Production/FTP
+```
+
+:::
+
+### Output
+
+```text
+Uploaded dockline-hello.txt.
+Downloaded downloaded-hello.txt.
+Connection closed.
+```
+
+The source/destination and overwrite rules are the same as the SFTP program. [FTP mapping](/guide/ftp) explains saved logon modes, charset and TLS options.
 
 ## Compatibility APIs
 
-Existing `Factory.fromServer(site, options)` code still works. It returns the same Dockline connector class through a compatibility export; call `connect()`, consume returned resources and `disconnect()` in a `finally` block. Start new application code with `toConfig` and the Dockline SDK when local file convenience methods suit the task.
+`Factory.fromServer(site, options)` remains supported. It returns a disconnected Dockline adapter after translating FileZilla settings. Connect it explicitly, finish consuming resources, and disconnect in `finally`. `toConfig` fits Dockline's local-file helpers without adding another generic connector class.
 
-The reader parses the complete file but does not retain original XML. Only the selected normalized record receives supported credentials. Manager and Server JSON projections omit passwords; explicit property access can expose intentionally loaded credentials. Persistent site identity and revalidation workflows are described in [import workflows](/guide/import-workflows).
+Configuration can contain intentionally loaded credentials; do not log it. Manager/Server JSON omits passwords. [Import workflows](/guide/import-workflows) covers stable selections and revalidation. [Local fixtures](/guide/local-demo) test these mappings without external accounts.

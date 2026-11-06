@@ -1,6 +1,6 @@
 {
     "name": "@jalsoedesign/filezilla-cli",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "type": "module",
     "description": "Command-line interface for querying FileZilla sitemanager.xml files",
     "main": "dist/index.js",
@@ -17,16 +17,18 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@jalsoedesign/filezilla-connector-abstract": "^1.0.0",
-        "@jalsoedesign/filezilla-connector-ftp": "^1.0.0",
-        "@jalsoedesign/filezilla-connector-sftp": "^1.0.0",
-        "@jalsoedesign/filezilla-core": "^1.1.0",
-        "chalk": "6.0.0"
+        "@jalsoedesign/portline-abstract": "^1.0.0",
+        "@jalsoedesign/filezilla-connector-abstract": "^2.0.0",
+        "@jalsoedesign/filezilla-connector-ftp": "^2.0.0",
+        "@jalsoedesign/filezilla-connector-sftp": "^2.0.0",
+        "@jalsoedesign/filezilla-core": "^1.2.0",
+        "@jalsoedesign/portline-cli": "^1.0.0",
+        "@jalsoedesign/dockline-abstract": "^1.1.0"
     },
     "devDependencies": {
-        "tsx": "4.23.13",
+        "tsx": "4.23.15",
         "typescript": "6.0.3",
-        "vitest": "5.0.0"
+        "vitest": "5.1.0"
     },
     "license": "MIT",
     "engines": {
@@ -35,7 +37,8 @@
     "files": [
         "dist",
         "LICENSE",
-        "examples"
+        "examples",
+        "README.md"
     ],
     "exports": {
         ".": {

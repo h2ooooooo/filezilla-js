@@ -1,6 +1,6 @@
 {
     "name": "@jalsoedesign/filezilla-core",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Read and query FileZilla sitemanager.xml files from Node.js",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -13,13 +13,16 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "fast-xml-parser": "5.11.1"
+        "fast-xml-parser": "5.12.0",
+        "@jalsoedesign/portline-abstract": "^1.0.0",
+        "@jalsoedesign/portline-core": "^1.0.0",
+        "@jalsoedesign/portline-platform": "^1.0.0"
     },
     "devDependencies": {
-        "@types/node": "22.20.2",
-        "vitest": "5.0.0",
+        "@types/node": "22.20.5",
+        "vitest": "5.1.0",
         "typescript": "6.0.3",
-        "tsx": "4.23.13"
+        "tsx": "4.23.15"
     },
     "license": "MIT",
     "engines": {
@@ -27,7 +30,8 @@
     },
     "files": [
         "dist",
-        "LICENSE"
+        "LICENSE",
+        "README.md"
     ],
     "exports": {
         ".": {

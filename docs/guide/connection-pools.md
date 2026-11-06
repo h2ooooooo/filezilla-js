@@ -1,11 +1,15 @@
 # Connection pools and registered providers
 
-The generic transfer APIs on this page are implemented by the independent **Dockline packages**: `@jalsoedesign/dockline-abstract`, `@jalsoedesign/dockline-ftp-client` and `@jalsoedesign/dockline-sftp-client`. Existing FileZilla connector imports remain supported compatibility exports; saved-site factories and FileZilla host-key import stay in FileZilla JS. See [the project boundary and migration](/guide/dockline).
+These are integration recipes following [saved-site selection](/guide/quick-start). Supply `site`, verified factory options, a list of remote destination `paths`, `openSource(path)` returning a fresh host readable, and an `AbortSignal`. Imports belong at file scope. Pool writes resolve without printing; registered factories return disconnected connectors. See [Dockline pools](https://h2ooooooo.github.io/dockline/guide/pools) for the shared lifetime contract.
+
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
 ## One connection budget
 
-```ts
-import {ConnectorPool} from '@jalsoedesign/filezilla-connector-abstract';
+::: code-group
+
+```ts [TypeScript]
+import {ConnectorPool} from '@jalsoedesign/dockline-abstract';
 import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
 
 const pool = new ConnectorPool({
@@ -24,6 +28,68 @@ try {
 }
 ```
 
+```js [JavaScript]
+import {ConnectorPool} from '@jalsoedesign/dockline-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+
+const pool = new ConnectorPool({
+    create: () => SftpConnectorFactory.fromServer(site, verifiedConnectionOptions),
+    maxConnections: 3,
+    serverMaxConnections: site.properties.maximumMultipleConnections,
+    idleTimeoutMs: 30_000,
+});
+
+try {
+    await Promise.all(paths.map(path => pool.withConnection(async connector => {
+        await connector.write(path, () => openSource(path), {abortSignal});
+    }, {abortSignal})));
+} finally {
+    await pool.close();
+}
+```
+
+```js [MJS]
+import {ConnectorPool} from '@jalsoedesign/dockline-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+
+const pool = new ConnectorPool({
+    create: () => SftpConnectorFactory.fromServer(site, verifiedConnectionOptions),
+    maxConnections: 3,
+    serverMaxConnections: site.properties.maximumMultipleConnections,
+    idleTimeoutMs: 30_000,
+});
+
+try {
+    await Promise.all(paths.map(path => pool.withConnection(async connector => {
+        await connector.write(path, () => openSource(path), {abortSignal});
+    }, {abortSignal})));
+} finally {
+    await pool.close();
+}
+```
+
+```js [CommonJS]
+const {ConnectorPool} = require('@jalsoedesign/dockline-abstract');
+const {SftpConnectorFactory} = require('@jalsoedesign/filezilla-connector-sftp');
+
+const pool = new ConnectorPool({
+    create: () => SftpConnectorFactory.fromServer(site, verifiedConnectionOptions),
+    maxConnections: 3,
+    serverMaxConnections: site.properties.maximumMultipleConnections,
+    idleTimeoutMs: 30_000,
+});
+
+try {
+    await Promise.all(paths.map(path => pool.withConnection(async connector => {
+        await connector.write(path, () => openSource(path), {abortSignal});
+    }, {abortSignal})));
+} finally {
+    await pool.close();
+}
+```
+
+:::
+
 The pool creates independent authenticated sessions, not parallel commands on one FTP session. The default limit is three. A positive `serverMaxConnections` lowers that limit; zero means no additional saved-site limit. Every lease counts, including folder listing, stat, checksums, read consumption and uploads. Connections created outside this pool cannot be counted by it; use one shared pool for a shared server quota.
 
 The creation callback receives an `abortSignal` for cancellation-aware setup. Do not pre-create shared connector instances: each creation must return an independent connector owned by this pool. All trust/provider configuration applies to every new session. Repeated sessions can therefore require repeated application prompts unless the application's trust or credential provider remembers decisions.
@@ -40,7 +106,9 @@ Idle sessions are closed after 30 seconds by default; zero disables idle evictio
 
 ## Explicit connector registry
 
-```ts
+::: code-group
+
+```ts [TypeScript]
 import {ConnectorRegistry} from '@jalsoedesign/filezilla-connector-abstract';
 import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
 import {ServerProtocol} from '@jalsoedesign/filezilla-core';
@@ -53,6 +121,50 @@ const sftp = registry.register({
 
 const connector = sftp.fromServer(site, verifiedSftpOptions);
 ```
+
+```js [JavaScript]
+import {ConnectorRegistry} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {ServerProtocol} from '@jalsoedesign/filezilla-core';
+
+const registry = new ConnectorRegistry();
+const sftp = registry.register({
+    protocols: [ServerProtocol.SFTP],
+    factory: new SftpConnectorFactory(),
+});
+
+const connector = sftp.fromServer(site, verifiedSftpOptions);
+```
+
+```js [MJS]
+import {ConnectorRegistry} from '@jalsoedesign/filezilla-connector-abstract';
+import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {ServerProtocol} from '@jalsoedesign/filezilla-core';
+
+const registry = new ConnectorRegistry();
+const sftp = registry.register({
+    protocols: [ServerProtocol.SFTP],
+    factory: new SftpConnectorFactory(),
+});
+
+const connector = sftp.fromServer(site, verifiedSftpOptions);
+```
+
+```js [CommonJS]
+const {ConnectorRegistry} = require('@jalsoedesign/filezilla-connector-abstract');
+const {SftpConnectorFactory} = require('@jalsoedesign/filezilla-connector-sftp');
+const {ServerProtocol} = require('@jalsoedesign/filezilla-core');
+
+const registry = new ConnectorRegistry();
+const sftp = registry.register({
+    protocols: [ServerProtocol.SFTP],
+    factory: new SftpConnectorFactory(),
+});
+
+const connector = sftp.fromServer(site, verifiedSftpOptions);
+```
+
+:::
 
 Registration is explicit: no dependency scanning, automatic imports or arbitrary plugin loading. Duplicate protocols are rejected unless registration explicitly passes `{replace: true}`. `protocols()` returns the registered protocol IDs. Unsupported protocols fail before connection.
 

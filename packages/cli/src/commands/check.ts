@@ -4,23 +4,7 @@ import {join} from 'node:path';
 import {getSiteManager, LogonType, ServerProtocol, type Server} from '@jalsoedesign/filezilla-core';
 import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
 import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
-import {
-    AuthError,
-    ConnectorError,
-    CredentialProviderError,
-    DirectoryAccessError,
-    HostTrustError,
-    NotFoundError,
-    NotSupportedError,
-    OperationAbortedError,
-    OperationTimeoutError,
-    PermissionError,
-    ResourceLimitError,
-    UnsupportedProtocolError,
-    type ConnectionStage,
-    type ConnectorOperationOptions,
-    type TransferConnector,
-} from '@jalsoedesign/filezilla-connector-abstract';
+import {AuthError, ConnectorError, CredentialProviderError, DirectoryAccessError, HostTrustError, NotFoundError, NotSupportedError, OperationAbortedError, OperationTimeoutError, PermissionError, ResourceLimitError, UnsupportedProtocolError, type ConnectionStage, type ConnectorOperationOptions, type TransferConnector} from '@jalsoedesign/dockline-abstract';
 
 export type ConnectionCheckStage = ConnectionStage | 'input' | 'list' | 'cleanup';
 export type ConnectionCheckStatus = 'ok' | 'invalid-options' | 'trust-rejected' | 'authentication-failed' |

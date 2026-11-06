@@ -9,10 +9,12 @@ Read saved FileZilla sites from Node.js or a CLI, select the configuration you n
 | Package | Purpose |
 | --- | --- |
 | `@jalsoedesign/filezilla-core` | Site Manager parsing, saved-site selection, import diagnostics and metadata snapshots |
-| `@jalsoedesign/filezilla-connector-abstract` | FileZilla factories, provider registry and shared Dockline exports |
+| `@jalsoedesign/filezilla-connector-abstract` | FileZilla-specific factories and numeric-protocol provider registry |
 | `@jalsoedesign/filezilla-connector-ftp` | Saved FTP/FTPS configuration mapped to Dockline |
 | `@jalsoedesign/filezilla-connector-sftp` | Saved SFTP configuration and FileZilla host-key import |
-| `@jalsoedesign/filezilla-cli` | Profile search, saved-site list/get commands and a read-only connection check |
+| `@jalsoedesign/filezilla-cli` | Profile queries, guarded preview/sync/apply/status and a read-only connection check |
+
+Portline supplies shared profile contracts, queries, native storage safeguards and CLI infrastructure. FileZilla retains its application APIs and executable; Dockline supplies transfer and SSH operations. Install built npm dependencies before building this repository. [Development](https://github.com/h2ooooooo/portline/blob/main/docs/development.md).
 
 ## Install
 
@@ -53,8 +55,14 @@ npm run docs:install
 npm run docs:build
 ```
 
-Dockline is installed from npm. Tests use disposable local servers and public test fixtures. See [release setup](docs/development/releasing.md) for GitHub, Pages and npm publishing instructions.
 
 FileZilla TS is an independent project and is not affiliated with or endorsed by the FileZilla project. Licensed under MIT.
 
-See [updates and releases](https://h2ooooooo.github.io/filezilla-js/development/releasing.html) for updating all packages, publishing to npm and deploying documentation.
+
+Related libraries: [Portline ecosystem directory](https://h2ooooooo.github.io/portline/ecosystem).
+
+## Runnable examples
+
+[Run a local demo](docs/guide/local-demo.md) for one-command examples and captured output. Transfer demos start temporary loopback-only protocol servers.
+
+Generic FtpConnector/SftpConnector classes, KnownHostsStore, errors and transfer utilities are imported directly from Dockline. FileZilla connector packages expose only saved-site factories, FileZilla registry contracts and FileZilla host-key import. See the [architecture and migration guide](docs/guide/dockline.md).

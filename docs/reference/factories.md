@@ -1,70 +1,14 @@
-# Factories and errors
+# Factories and transport errors
 
-Factories are the FileZilla-to-Dockline bridge. `FtpConnectorFactory.toConfig(server, options?)` returns `FtpTransferConfig`; `SftpConnectorFactory.toConfig(server, options?)` returns `SftpTransferConfig`. The same methods are available on factory instances. They share mapping/validation with `fromServer`, return plain configuration and do not connect. See the complete [quick start](/guide/quick-start).
+FileZilla's `ConnectorFactory` and concrete FTP/SFTP factories translate a native `Server` into a Dockline configuration or disconnected adapter. `ConnectorRegistry` dispatches numeric FileZilla protocols to explicitly registered providers.
 
-## Concrete factories
+| API | Result |
+| --- | --- |
+| `Factory.toConfig(server, options)` | Plain Dockline connection configuration; does not connect |
+| `Factory.fromServer(server, options)` | Dockline adapter with saved settings applied; caller owns connect/disconnect |
+| `registry.register(provider)` | Typed FileZilla registration handle |
+| `registry.fromServer(server, options)` | Runtime dispatch to a registered FileZilla factory |
 
-```ts
-FtpConnectorFactory.fromServer(server, options?)
-SftpConnectorFactory.fromServer(server, options?)
+Both concrete factories expose static and instance methods. Saved logon modes, key paths, directories, passive/TLS choices and charset settings are interpreted by the FileZilla integration; transports and generic connection policy are implemented by Dockline. The shared Portline factory/registry contracts are application-independent, while the FileZilla wrapper uses native `Server` and numeric protocol values.
 
-new FtpConnectorFactory().fromServer(server, options?)
-new SftpConnectorFactory().fromServer(server, options?)
-```
-
-Static convenience methods and instance methods map saved settings into disconnected adapters. The factory must decode the selected remote directory, so unsupported saved path dialects still fail at this connection-use boundary.
-
-FTP options extend `ConnectorOperationOptions` and `ConnectorConnectionOptions`, adding `secureOptions` and `filenameEncoding`. SFTP options are `Omit<SftpConnectorConfig, 'host' | 'port' | 'username' | 'initialPath'>`: trust callbacks, verifier, shared controls and explicit password/key/passphrase overrides are available while destination identity comes from the selected site.
-
-| LogonType | FTP | SFTP |
-| --- | --- | --- |
-| anonymous | anonymous user, empty password | Rejected |
-| normal | Saved credentials or credential provider | Saved credentials, provider or supported overrides |
-| ask | Requires credential provider | Requires explicit password, provider, agent or keyboard-interactive handler |
-| interactive | Requires credential provider | Requires a keyboard-interactive string or callback |
-| account | Warns; account field ignored | Password path; no separate account implementation |
-| key | Rejected | Explicit key override or saved keyFile; passphrase override or saved password |
-| profile, adc | Rejected | Rejected |
-
-SFTP explicitly rejects unknown modes. The reader validates its logon range, but arbitrary direct `Server` construction remains the caller's responsibility. See [configuration](/reference/configuration).
-
-## Abstract contract
-
-```ts
-abstract class ConnectorFactory<TConnector extends StorageAdapter, TOptions = unknown> {
-    abstract fromServer(server: Server, options?: TOptions): TConnector;
-}
-```
-
-Both factories extend this instance contract. For explicitly registered protocol dispatch, use `ConnectorRegistry`; it does not scan or automatically import packages. See [providers and pools](/guide/connection-pools).
-
-## Shared runtime errors
-
-Dockline owns these classes; the FileZilla compatibility packages re-export the same constructors:
-
-```text
-Error
-└─ ConnectorError
-   ├─ AuthError
-   │  └─ CredentialProviderError
-   ├─ NotFoundError
-   ├─ PermissionError
-   ├─ UnsupportedProtocolError
-   ├─ NotSupportedError
-   ├─ HostTrustError
-   │  └─ TlsTrustError
-   ├─ OperationAbortedError
-   ├─ OperationTimeoutError
-   ├─ ConnectionClosedError
-   ├─ NameResolutionError
-   ├─ ConnectionRefusedError
-   ├─ DirectoryAccessError
-   ├─ ResourceLimitError
-   ├─ IntegrityError
-   ├─ PoolClosedError
-   └─ PublicationError
-```
-
-`ConnectorError(message, cause?, code?, stage?)` exposes optional readonly cause, status code and known connection stage. New subclasses also include `NameResolutionError`, `ConnectionRefusedError`, `TlsTrustError`, `CredentialProviderError`, `DirectoryAccessError`, `ResourceLimitError`, `IntegrityError`, `PoolClosedError` and `PublicationError`. See the [complete error reference](/reference/errors), [error handling](/guide/errors) and [transfer tools](/guide/advanced-transfers) for their contracts. Transport wrappers omit raw sensitive causes and preserve only useful status information. Derived lifecycle errors have default messages/codes. `KeyAuthError` remains a deprecated SFTP export aliasing `AuthError`.
-
-Shared and concrete imports have matching runtime identity within a compatible dependency tree. `_wrapErrorForTest` is still a test aid, not a general-purpose sanitizer or stable application extension point. The unresolved upstream SFTP false-absence case is described in [errors](/guide/errors).
+Transport errors come from `@jalsoedesign/dockline-abstract`. Import them directly; FileZilla does not re-export their constructors. A factory can refuse an unsupported saved protocol or logon mode before connecting. An adapter returned by `fromServer` throws Dockline errors during transport operations. See [Dockline errors](https://h2ooooooo.github.io/dockline/guide/errors), [FileZilla mapping](/guide/dockline) and the [exact signatures](/reference/types).

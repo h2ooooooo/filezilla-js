@@ -84,10 +84,10 @@ if (process.argv.includes('--artifacts')) {
 await writeFile(path.join(staging, 'pack-after.json'), JSON.stringify(packed, null, 2));
 
 const dependencies = {
-    '@jalsoedesign/dockline-core': '^1.1.0-rc.1',
-    '@jalsoedesign/dockline-ftp-client': '^1.1.0-rc.1',
-    '@jalsoedesign/dockline-sftp-client': '^1.1.0-rc.1',
-    '@jalsoedesign/portline-dockline': '^1.0.0-rc.1',
+    '@jalsoedesign/dockline-core': '^1.1.0',
+    '@jalsoedesign/dockline-ftp-client': '^1.1.0',
+    '@jalsoedesign/dockline-sftp-client': '^1.1.0',
+    '@jalsoedesign/portline-dockline': '^1.0.0',
     ...Object.fromEntries(packed.map((item) => [item.name, `file:${path.join(artifacts, item.filename).split(path.sep).join('/')}`])),
 };
 

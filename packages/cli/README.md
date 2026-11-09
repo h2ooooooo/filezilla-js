@@ -10,7 +10,7 @@ Find saved FileZilla connection details from your terminal. Search by site name,
 
 Command-line interface for querying FileZilla `sitemanager.xml` files and optionally checking a connection without remote mutations. Metadata queries use [`@jalsoedesign/filezilla-core`](../core/README.md); the opt-in check uses the shared Portline–Dockline bridge. Install the matching Dockline protocol client before checking a connection.
 
-The CLI package does not install FTP/SFTP clients automatically. Use `npm install @jalsoedesign/filezilla-cli@rc @jalsoedesign/dockline-sftp-client@rc` for local SFTP checks, or select `@jalsoedesign/dockline-ftp-client@rc` for FTP/FTPS. A missing client reports `client-not-installed` with exit code `5` and the required installation command. SDK SSH command sessions use the shared bridge's `withSsh` API and the optional SSH client; they are not a new FileZilla CLI subcommand.
+The CLI package does not install FTP/SFTP clients automatically. Use `npm install @jalsoedesign/filezilla-cli @jalsoedesign/dockline-sftp-client` for local SFTP checks, or select `@jalsoedesign/dockline-ftp-client` for FTP/FTPS. A missing client reports `client-not-installed` with exit code `5` and the required installation command. SDK SSH command sessions use the shared bridge's `withSsh` API and the optional SSH client; they are not a new FileZilla CLI subcommand.
 
 ## Why
 
@@ -21,7 +21,7 @@ Connection details already live in FileZilla. This CLI lets you query them direc
 Use Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Install from the public npm registry.
 
 ```bash
-npm install -g @jalsoedesign/filezilla-cli@rc
+npm install -g @jalsoedesign/filezilla-cli
 ```
 
 ## Quick start

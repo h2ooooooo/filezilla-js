@@ -9,14 +9,14 @@
         "lint": "eslint tests --no-error-on-unmatched-pattern --max-warnings 0"
     },
     "devDependencies": {
-        "@jalsoedesign/dockline-ftp-client": "^1.1.0-rc.1",
-        "@jalsoedesign/dockline-abstract": "^1.1.0-rc.1",
-        "@jalsoedesign/filezilla-core": "^1.2.0-rc.1",
+        "@jalsoedesign/dockline-ftp-client": "^1.1.0",
+        "@jalsoedesign/dockline-abstract": "^1.1.0",
+        "@jalsoedesign/filezilla-core": "^1.2.0",
         "ftp-srv": "4.6.3",
         "vitest": "5.1.0",
         "typescript": "6.0.3",
         "basic-ftp": "6.2.6",
-        "@jalsoedesign/portline-dockline": "^1.0.0-rc.1"
+        "@jalsoedesign/portline-dockline": "^1.0.0"
     },
     "license": "MIT",
     "engines": {

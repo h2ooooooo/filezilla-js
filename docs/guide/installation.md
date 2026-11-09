@@ -6,11 +6,11 @@ Use Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Repository development uses npm `>=
 
 | Use | Command |
 | --- | --- |
-| Read saved sites | `npm install @jalsoedesign/filezilla-core@rc` |
-| Connect saved FTP/FTPS sites | `npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-ftp-client@rc` |
-| Connect saved SFTP sites | `npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-sftp-client@rc` |
-| Run SSH commands through a saved SFTP endpoint | `npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-ssh-client@rc` |
-| CLI in a project | `npm install @jalsoedesign/filezilla-cli@rc` |
+| Read saved sites | `npm install @jalsoedesign/filezilla-core` |
+| Connect saved FTP/FTPS sites | `npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-ftp-client` |
+| Connect saved SFTP sites | `npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-sftp-client` |
+| Run SSH commands through a saved SFTP endpoint | `npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-ssh-client` |
+| CLI in a project | `npm install @jalsoedesign/filezilla-cli` |
 
 The core reader has no FTP or SSH transport dependency. The shared bridge loads independently installed clients and reports an installation command when a required client is absent. Install `@jalsoedesign/dockline-ssh-client` for SSH command sessions.
 
@@ -25,7 +25,7 @@ After installing `filezilla-core`, follow [the API quick start](/api/quick-start
 ## Global CLI
 
 ```sh
-npm install -g @jalsoedesign/filezilla-cli@rc
+npm install -g @jalsoedesign/filezilla-cli
 filezilla-js --help
 ```
 

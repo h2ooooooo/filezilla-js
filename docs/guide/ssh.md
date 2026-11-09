@@ -5,7 +5,7 @@ Use the shared bridge to request SSH commands explicitly from a saved FileZilla 
 ## Install and select a site
 
 ```sh
-npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-ssh-client@rc
+npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-ssh-client
 ```
 
 Select an existing SFTP site named `Production/Web` with saved normal/password or key-file authentication and a POSIX server providing `uname`. Use the exact canonical profile path returned by the source. Reading the source does not open sockets or resolve credentials.

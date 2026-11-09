@@ -56,11 +56,11 @@
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
-        "@jalsoedesign/dockline-abstract": "^1.1.0-rc.1",
-        "@jalsoedesign/dockline-core": "^1.1.0-rc.1",
-        "@jalsoedesign/dockline-ftp-client": "^1.1.0-rc.1",
-        "@jalsoedesign/dockline-sftp-client": "^1.1.0-rc.1",
-        "@jalsoedesign/dockline-ssh-client": "^1.1.0-rc.1",
+        "@jalsoedesign/dockline-abstract": "^1.1.0",
+        "@jalsoedesign/dockline-core": "^1.1.0",
+        "@jalsoedesign/dockline-ftp-client": "^1.1.0",
+        "@jalsoedesign/dockline-sftp-client": "^1.1.0",
+        "@jalsoedesign/dockline-ssh-client": "^1.1.0",
         "@stylistic/eslint-plugin": "5.10.0",
         "@stylistic/stylelint-plugin": "5.3.1",
         "@types/node": "22.20.5",
@@ -75,11 +75,11 @@
         "typescript-eslint": "8.72.1",
         "vite": "8.3.6",
         "vitest": "5.1.0",
-        "@jalsoedesign/portline-abstract": "^1.0.0-rc.1",
-        "@jalsoedesign/portline-core": "^1.0.0-rc.1",
-        "@jalsoedesign/portline-platform": "^1.0.0-rc.1",
-        "@jalsoedesign/portline-cli": "^1.0.0-rc.1",
-        "@jalsoedesign/portline-dockline": "^1.0.0-rc.1"
+        "@jalsoedesign/portline-abstract": "^1.0.0",
+        "@jalsoedesign/portline-core": "^1.0.0",
+        "@jalsoedesign/portline-platform": "^1.0.0",
+        "@jalsoedesign/portline-cli": "^1.0.0",
+        "@jalsoedesign/portline-dockline": "^1.0.0"
     },
     "engines": {
         "node": "^22.22.2 || ^24.15.0 || >=26.0.0",

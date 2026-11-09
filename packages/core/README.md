@@ -15,7 +15,7 @@ Read and query FileZilla `sitemanager.xml` files from TypeScript or JavaScript p
 Use Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Install from the public npm registry.
 
 ```bash
-npm install @jalsoedesign/filezilla-core@rc
+npm install @jalsoedesign/filezilla-core
 ```
 
 ## Quick Start

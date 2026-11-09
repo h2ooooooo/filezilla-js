@@ -9,7 +9,7 @@ Use an explicit XML path and a canonical selection returned by `manager.getServe
 ## Load one SFTP site, connect and upload one file
 
 ```sh
-npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-sftp-client@rc
+npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-sftp-client
 ```
 
 Use an existing SFTP site named `Production/Web` with saved normal/password or key-file authentication. Create `hello.txt` on the host. The server's saved starting directory must exist and allow writes. The metadata-only `Demo` fixture does not supply a server or credentials. Ask/interactive modes require [explicit credential handlers](/guide/ssh-options).
@@ -209,7 +209,7 @@ Uploads replace an existing remote destination by default. Downloads refuse an e
 ## Connect through a saved FTP or FTPS configuration
 
 ```sh
-npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-ftp-client@rc
+npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-ftp-client
 ```
 
 Select an existing `Production/FTP` site and the same host input file. FileZilla FTP/FTPES require explicit TLS, FTPS uses implicit TLS, and INSECURE_FTP explicitly selects plaintext. The saved port is retained; no TLS policy is inferred from it. Certificate verification remains enabled.

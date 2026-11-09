@@ -5,7 +5,7 @@ Install the CLI, save a synthetic site, then run a metadata query and compare th
 ## Install
 
 ```sh
-npm install --global @jalsoedesign/filezilla-cli@rc
+npm install --global @jalsoedesign/filezilla-cli
 filezilla-js --help
 ```
 

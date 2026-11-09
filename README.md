@@ -18,13 +18,13 @@ Portline supplies shared profile contracts, queries, native storage safeguards a
 Read saved configuration:
 
 ```sh
-npm install @jalsoedesign/filezilla-core@rc
+npm install @jalsoedesign/filezilla-core
 ```
 
 Connect a saved SFTP site and transfer files:
 
 ```sh
-npm install @jalsoedesign/filezilla-core@rc @jalsoedesign/portline-dockline@rc @jalsoedesign/dockline-sftp-client@rc
+npm install @jalsoedesign/filezilla-core @jalsoedesign/portline-dockline @jalsoedesign/dockline-sftp-client
 ```
 
 The [quick start](https://h2ooooooo.github.io/filezilla-js/guide/quick-start.html) covers loading sites, connecting through saved configuration, and uploading or downloading one file.
@@ -34,7 +34,7 @@ For [SSH commands through a saved SFTP endpoint](docs/guide/ssh.md), install `@j
 Install the terminal utility:
 
 ```sh
-npm install -g @jalsoedesign/filezilla-cli@rc
+npm install -g @jalsoedesign/filezilla-cli
 filezilla-js --search example.com --show-password
 filezilla-js --help
 ```
@@ -66,4 +66,4 @@ Related libraries: [Portline ecosystem directory](https://h2ooooooo.github.io/po
 
 FileZilla core supplies complete Portline profiles and native host-key import without installing transports. The optional shared `@jalsoedesign/portline-dockline` bridge opens scoped file or SSH sessions using independently installed Dockline protocol clients. See the [architecture and migration guide](docs/guide/dockline.md).
 
-See [First release candidate](RELEASE_RC.md) for RC versions and installation commands.
+See [Stable release](RELEASE.md) for versions, installation commands and the compatibility policy.

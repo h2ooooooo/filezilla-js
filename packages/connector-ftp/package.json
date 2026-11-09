@@ -1,48 +1,26 @@
 {
-    "name": "@jalsoedesign/filezilla-connector-ftp",
+    "name": "@jalsoedesign/filezilla-test-ftp",
     "version": "2.0.0",
     "type": "module",
-    "description": "Map FileZilla saved sites to Dockline FTP and FTPS settings",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "description": "Private ftp transport regression tests",
     "scripts": {
-        "build": "node ../../scripts/build-package.mjs",
         "test": "vitest run",
         "test:watch": "vitest",
-        "dev": "tsc --watch",
-        "lint": "eslint src tests --no-error-on-unmatched-pattern --max-warnings 0",
-        "prepack": "npm run build"
-    },
-    "dependencies": {
-        "@jalsoedesign/filezilla-connector-abstract": "^2.0.0",
-        "@jalsoedesign/dockline-ftp-client": "^1.1.0",
-        "@jalsoedesign/dockline-abstract": "^1.1.0"
-    },
-    "peerDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.2.0"
+        "lint": "eslint tests --no-error-on-unmatched-pattern --max-warnings 0"
     },
     "devDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.2.0",
+        "@jalsoedesign/dockline-ftp-client": "^1.1.0-rc.1",
+        "@jalsoedesign/dockline-abstract": "^1.1.0-rc.1",
+        "@jalsoedesign/filezilla-core": "^1.2.0-rc.1",
         "ftp-srv": "4.6.3",
         "vitest": "5.1.0",
         "typescript": "6.0.3",
-        "basic-ftp": "6.2.6"
+        "basic-ftp": "6.2.6",
+        "@jalsoedesign/portline-dockline": "^1.0.0-rc.1"
     },
     "license": "MIT",
     "engines": {
         "node": ">=22.22.2"
-    },
-    "files": [
-        "dist",
-        "LICENSE",
-        "README.md"
-    ],
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "default": "./dist/index.js"
-        },
-        "./package.json": "./package.json"
     },
     "repository": {
         "type": "git",
@@ -53,7 +31,5 @@
     "bugs": {
         "url": "https://github.com/h2ooooooo/filezilla-js/issues"
     },
-    "publishConfig": {
-        "access": "public"
-    }
+    "private": true
 }

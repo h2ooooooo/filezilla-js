@@ -8,7 +8,7 @@ Use synthetic XML, disposable local servers and public test fixtures. Keep patch
 
 Follow `CODING_STYLE.md`: four-space indentation, single quotes, semicolons, same-line braces, compact named imports and one blank line between logical steps. Keep formatting separate from behavior changes. Prefer explicit types, early validation and small functions.
 
-Keep XML interpretation in core and FileZilla configuration mapping in bridge packages. Generic transfer behavior belongs to Dockline. Define option precedence, resource ownership, cancellation and error semantics before adding behavior. An unknown server failure must not be treated as confirmed absence.
+Keep XML interpretation and native-to-Portline mapping in core. Shared Portline-to-Dockline conversion belongs in `@jalsoedesign/portline-dockline`. Generic transfer behavior belongs to Dockline. Define option precedence, resource ownership, cancellation and error semantics before adding behavior. An unknown server failure must not be treated as confirmed absence.
 
 ## Verification
 

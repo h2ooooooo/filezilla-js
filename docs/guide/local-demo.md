@@ -18,7 +18,7 @@ node examples/test-ftp.mjs
 
 Equivalent npm command: `npm run demo:ftp`.
 
-The example invokes the real `filezilla-js check` command, checks its JSON status and connection cleanup, then uploads and downloads a file through the FileZilla connector and Dockline SDK. The CLI check itself performs no transfer.
+The example invokes the real `filezilla-js check` command, checks its JSON status and connection cleanup, then uploads and downloads a file through the shared Portline–Dockline bridge. The CLI check itself performs no transfer.
 
 Expected output, captured from a successful run:
 
@@ -43,7 +43,7 @@ node examples/test-sftp.mjs
 
 Equivalent npm command: `npm run demo:sftp`.
 
-The example invokes the real `filezilla-js check` command, checks its JSON status and connection cleanup, then uploads and downloads a file through the FileZilla connector and Dockline SDK. The generated server key is pinned explicitly. A second CLI invocation deliberately supplies a wrong pin and must fail with exit 3. The CLI check itself performs no transfer.
+The example invokes the real `filezilla-js check` command, checks its JSON status and connection cleanup, then uploads and downloads a file through the shared Portline–Dockline bridge. The generated server key is pinned explicitly. A second CLI invocation deliberately supplies a wrong pin and must fail with exit 3. The CLI check itself performs no transfer.
 
 Expected output, captured from a successful run:
 
@@ -58,6 +58,18 @@ PASS: FileZilla configuration -> local SFTP connection and transfers.
 Local server stopped.
 Temporary files removed.
 ```
+
+## SSH commands and downloadable programs
+
+Run every complete documentation program, including the [saved-site SSH example](/guide/ssh), against disposable fixtures:
+
+```sh
+npm run docs:examples:check
+```
+
+This checks strict TypeScript types, synchronized downloadable files and all TypeScript, JavaScript, MJS and CommonJS variants. FTP/SFTP programs transfer synthetic files. The SSH server accepts the example's quoted `uname -s` request and returns synthetic `Linux` output; it never runs a command on the host. Verified pins come from each generated fixture key, and no real settings or account is read.
+
+Successful completion ends with `32 language variants passed using synthetic XML and local fixtures only.` The SSH program uses `withSsh`; it is not a FileZilla CLI command.
 
 ## Interpreting the result
 

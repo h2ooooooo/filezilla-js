@@ -36,8 +36,8 @@ Format all code and styles, or target a specific code file:
 
 ```sh
 npm run format
-npm run style:check -- packages/connector-abstract/src/operation-options.ts
-npm run style:fix -- packages/connector-abstract/src/operation-options.ts
+npm run style:check -- packages/core/src/FileZillaProfileSource.ts
+npm run style:fix -- packages/core/src/FileZillaProfileSource.ts
 ```
 
 The configuration covers package source, tests, examples, scripts, configuration files, and the VitePress configuration/theme TypeScript. Generated output, dependencies and frozen audit evidence/reports are excluded. `eslint.style.config.mjs` remains a compatible alias for `eslint.config.mjs`; editors can use the default ESLint configuration for fix-on-save. A second formatter with different rules can undo the chosen spacing.

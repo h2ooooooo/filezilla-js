@@ -1,5 +1,5 @@
-# FileZilla SFTP integration
+# Private SFTP regression workspace
 
-SftpConnectorFactory translates saved sites, and FileZillaHostKeyStore imports FileZilla trusted-key metadata. Generic SFTP connections and key handling belong to Dockline and dockline-keys.
+This workspace retains Dockline protocol regression tests and local fixtures. It is private and is excluded from public package inventories.
 
-See the [current guide](https://h2ooooooo.github.io/filezilla-js/guide/sftp) and [public signatures](https://h2ooooooo.github.io/filezilla-js/reference/types).
+FileZilla native settings are normalized by `@jalsoedesign/filezilla-core`. Shared connection conversion and scoped execution use `@jalsoedesign/portline-dockline`, with independently installed Dockline protocol clients. See the [connection guide](https://h2ooooooo.github.io/filezilla-js/guide/dockline).

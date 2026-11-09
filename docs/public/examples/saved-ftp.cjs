@@ -1,19 +1,12 @@
-const {getSiteManager} = require('@jalsoedesign/filezilla-core');
-const {FtpConnectorFactory} = require('@jalsoedesign/filezilla-connector-ftp');
-const {Dockline} = require('@jalsoedesign/dockline-core');
+const {FileZillaProfileSource} = require('@jalsoedesign/filezilla-core');
+const {createDocklineBridge} = require('@jalsoedesign/portline-dockline');
 
 async function main() {
     const [filename = './sitemanager.xml', selectedPath = 'Production/FTP'] = process.argv.slice(2);
-    const manager = getSiteManager(filename, {credentialPath: selectedPath});
-    const site = manager.getServerByPath(selectedPath);
+    const source = FileZillaProfileSource.fromFile(filename);
+    const bridge = createDocklineBridge({source});
 
-    if (!site) {
-        throw new Error('The selected saved site is unavailable.');
-    }
-
-    const config = FtpConnectorFactory.toConfig(site);
-
-    await Dockline.withConnection(config, async remote => {
+    await bridge.withFiles(selectedPath, async remote => {
         // Upload host source './hello.txt' to server destination 'dockline-hello.txt'.
         await remote.uploadFile('./hello.txt', 'dockline-hello.txt');
         console.log('Uploaded dockline-hello.txt.');

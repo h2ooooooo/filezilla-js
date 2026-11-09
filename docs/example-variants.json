@@ -139,6 +139,26 @@
             "name": "check-site",
             "filename": "check-site.cjs",
             "language": "CommonJS"
+        },
+        {
+            "name": "saved-ssh",
+            "filename": "saved-ssh.ts",
+            "language": "TypeScript"
+        },
+        {
+            "name": "saved-ssh",
+            "filename": "saved-ssh.js",
+            "language": "JavaScript"
+        },
+        {
+            "name": "saved-ssh",
+            "filename": "saved-ssh.mjs",
+            "language": "MJS"
+        },
+        {
+            "name": "saved-ssh",
+            "filename": "saved-ssh.cjs",
+            "language": "CommonJS"
         }
     ],
     "programs": [
@@ -183,6 +203,12 @@
             "page": "guide/connection-check.md",
             "args": "./sitemanager.xml Production/Web",
             "output": "Connected: true\nCleanup: closed"
+        },
+        {
+            "name": "saved-ssh",
+            "page": "guide/ssh.md",
+            "args": "./sitemanager.xml Production/Web",
+            "output": "Linux\nConnection closed."
         }
     ]
 }

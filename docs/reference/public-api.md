@@ -1,6 +1,6 @@
 # Public API index
 
-FileZilla exports native settings APIs and settings-to-Dockline integration. Generic transport classes, errors, pools and transfer utilities are imported directly from Dockline. See [the architecture and import migration](/guide/dockline) and the generated [exact TypeScript signatures](/reference/types).
+FileZilla exports native settings APIs and complete Portline connection definitions. The optional shared Portline–Dockline integration handles execution for all readers. Generic transport classes, errors, pools and transfer utilities are imported directly from Dockline. See [the architecture and import migration](/guide/dockline) and the generated [exact TypeScript signatures](/reference/types).
 
 ## Core: filezilla-core
 
@@ -11,21 +11,16 @@ FileZilla exports native settings APIs and settings-to-Dockline integration. Gen
 | `SiteIdentityStore` and its record/reconcile types | Stable application-owned selection identity |
 | `createMetadataSnapshot`, `parseMetadataSnapshot`, `diffMetadata`, `MetadataSnapshotError` and metadata types | Redacted immutable snapshots and metadata differences |
 | `FileZillaProfileSource` | Adapt FileZilla sites to Portline profiles and explicit credential resolution |
+| `FileZillaHostKeyStore`, `FileZillaHostKeyStoreError` | Read modern native trusted-key snapshots and identify native store validation errors |
 | `createFileZillaWriter` | Construct a Portline native writer for explicit FileZilla preview/apply |
 
 Readers are synchronous except where the normalized source contract explicitly permits async operations. Reading does not connect. Legacy models have no save method. Native XML changes use the separate guarded writer; identity JSON persistence remains application-owned.
 
-## FileZilla connector integrations
+## Shared connection integration
 
-| Package | Exports |
-| --- | --- |
-| `filezilla-connector-abstract` | `ConnectorFactory<TConnector, TOptions>`, `ConnectorRegistry`, `RegisteredProvider`, `Registration` |
-| `filezilla-connector-ftp` | `FtpConnectorFactory`, `FtpConnectorFactoryOptions` |
-| `filezilla-connector-sftp` | `SftpConnectorFactory`, `SftpConnectorFactoryOptions`, `FileZillaHostKeyStore` |
+`createDocklineBridge` from `@jalsoedesign/portline-dockline` accepts a source, optional credential provider and explicit trust provider. Its asynchronous `toConfig` produces file-transfer configuration, `toSshConfig` prepares SSH configuration; `createFileAdapter` returns a disconnected adapter; `withFiles` and `withSsh` scope connected sessions. Exact profile paths or normalized profile objects are accepted.
 
-Factories provide static and instance `toConfig(server, options)` and `fromServer(server, options)`. `toConfig` produces a Dockline configuration; `fromServer` creates a disconnected Dockline adapter. The registry dispatches FileZilla's numeric saved protocols to explicitly registered factories. The SFTP host-key importer reads modern FileZilla `hostkeys.xml`; it does not persist approvals.
-
-These entry points do not re-export `FtpConnector`, `SftpConnector`, `KnownHostsStore`, generic transport types or errors. Use [Dockline's API reference](https://h2ooooooo.github.io/dockline/reference/api) for those APIs.
+The source supplies credential resolution by default. Connection options select a connection ID and supply runtime authentication, host fingerprints, deadlines and transport policy. Only the matching installed Dockline client is loaded. See the [complete program](/guide/quick-start).
 
 ## CLI: filezilla-cli
 

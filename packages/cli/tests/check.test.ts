@@ -5,7 +5,7 @@ import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {SftpConnectorFactory, type SftpConnectorFactoryOptions} from '@jalsoedesign/filezilla-connector-sftp';
+import {DocklineBridge, ProfileExecutionError} from '@jalsoedesign/portline-dockline';
 import {type SftpConnector} from '@jalsoedesign/dockline-sftp-client';
 import {AuthError, HostTrustError, NameResolutionError, PermissionError} from '@jalsoedesign/dockline-abstract';
 import {checkConnection} from '../src/commands/check.js';
@@ -74,12 +74,78 @@ function mockedConnector() {
             yield {path: '/b', type: 'directory'};
         }),
     };
-    const factory = vi.spyOn(SftpConnectorFactory, 'fromServer').mockReturnValue(connector as unknown as SftpConnector);
+    const factory = vi.spyOn(DocklineBridge.prototype, 'createFileAdapter')
+        .mockResolvedValue(connector as unknown as SftpConnector);
 
     return {connector, calls, factory};
 }
 
 describe('read-only check operation', () => {
+    it('allows interactive host approval without a preconfigured fingerprint', async () => {
+        const fixture = mockedConnector();
+        const input = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+        const output = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+
+        Object.defineProperty(process.stdin, 'isTTY', {value: true, configurable: true});
+        Object.defineProperty(process.stderr, 'isTTY', {value: true, configurable: true});
+        cleanup.push(() => {
+            if (input) {
+                Object.defineProperty(process.stdin, 'isTTY', input);
+            } else {
+                Reflect.deleteProperty(process.stdin, 'isTTY');
+            }
+
+            if (output) {
+                Object.defineProperty(process.stderr, 'isTTY', output);
+            } else {
+                Reflect.deleteProperty(process.stderr, 'isTTY');
+            }
+        });
+
+        expect((await checkConnection(site())).ok).toBe(true);
+        expect(fixture.factory.mock.calls[0][1]?.hostFingerprint).toBeUndefined();
+    });
+    it('does not forward a leftover saved password for anonymous FTP', async () => {
+        const fixture = mockedConnector();
+
+        await checkConnection(site({
+            protocol: ServerProtocol.INSECURE_FTP,
+            logonType: LogonType.anonymous,
+            password: 'leftover-password',
+        }));
+
+        expect(fixture.factory.mock.calls[0][1]?.password).toBeUndefined();
+        expect(fixture.factory.mock.calls[0][1]?.passphrase).toBeUndefined();
+    });
+    it('keeps a saved key passphrase separate from a runtime password authentication override', async () => {
+        const fixture = mockedConnector();
+
+        await checkConnection(site({
+            logonType: LogonType.key,
+            keyFile: 'C:/keys/fixture.ppk',
+            password: 'key-passphrase',
+        }), {hostKeySha256: fingerprint});
+
+        expect(fixture.factory.mock.calls[0][0]).toMatchObject({
+            connections: [{authentication: [{type: 'private-key', path: {value: 'C:/keys/fixture.ppk'}}]}],
+        });
+        expect(fixture.factory.mock.calls[0][1]).toMatchObject({passphrase: 'key-passphrase'});
+        expect(fixture.factory.mock.calls[0][1]?.password).toBeUndefined();
+    });
+    it('reports missing optional clients with the installation instruction', async () => {
+        const fixture = mockedConnector();
+        const message = 'Install @jalsoedesign/dockline-sftp-client: npm install @jalsoedesign/dockline-sftp-client';
+
+        fixture.factory.mockRejectedValue(new ProfileExecutionError('MISSING_HANDLER', message));
+
+        expect(await checkConnection(site(), {hostKeySha256: fingerprint})).toMatchObject({
+            status: 'client-not-installed',
+            exitCode: 5,
+            message,
+            connected: false,
+            cleanup: 'not-required',
+        });
+    });
     it('connects and closes without directory probes or listing by default', async () => {
         const fixture = mockedConnector();
         const result = await checkConnection(site(), {hostKeySha256: fingerprint});
@@ -106,21 +172,9 @@ describe('read-only check operation', () => {
 
         await checkConnection(site(), {hostKeySha256: fingerprint});
 
-        const options = fixture.factory.mock.calls[0][1] as SftpConnectorFactoryOptions;
-        const challenge = {
-            host: '127.0.0.1',
-            port: 22,
-            keyType: 'ssh-rsa',
-            fingerprint,
-            publicKey: Buffer.alloc(0),
-            changed: false,
-            abortSignal: new AbortController().signal,
-        };
+        const options = fixture.factory.mock.calls[0][1];
 
-        expect(options.requireTrustPolicy).toBe(true);
-        expect(await options.hasTrustPolicy!(challenge)).toBe(true);
-        expect(await options.hasTrustPolicy!({...challenge, fingerprint: 'different'})).toBe(false);
-        expect(await options.acceptTrustPolicy!(challenge)).toBe(false);
+        expect(options?.hostFingerprint).toBe(fingerprint);
     });
 
     it('only performs explicitly requested metadata operations and allowlists listing output', async () => {
@@ -181,6 +235,7 @@ describe('read-only check operation', () => {
         const controller = new AbortController();
         const pending = checkConnection(site(), {hostKeySha256: fingerprint, abortSignal: controller.signal});
 
+        await vi.waitFor(() => expect(fixture.connector.connect).toHaveBeenCalledTimes(2));
         controller.abort();
 
         expect((await pending).exitCode).toBe(130);

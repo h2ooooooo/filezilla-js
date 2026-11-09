@@ -1,33 +1,19 @@
 # Architecture
 
-```text
-sitemanager.xml -> SiteManager -> selected Server
-                                      |
-                               factory.toConfig()
-                                      |
-                         Dockline SDK / FTP / SFTP
-```
+`sitemanager.xml → FileZillaProfileSource → Portline connection definition → portline-dockline → optional Dockline client`
 
-FileZilla core reads configuration and has no transport dependency. FileZilla bridge packages map saved settings to the published Dockline clients. Applications own credentials, host approval, allowed paths and recovery policy.
+FileZilla core interprets native settings once. Its normalized profiles preserve supported execution settings as well as searchable metadata. FileZilla's credential provider loads secrets only when explicitly asked to resolve the selected reference.
 
-Shared queries, credential orchestration, native write infrastructure and CLI commands live in the separate Portline repository's four shared packages. FileZilla adapters preserve the native API and CLI shapes. See [shared connection profiles](/development/connection-profiles) for development and release details.
+The shared Portline–Dockline integration handles protocol selection and runtime providers for every reader. It has no FileZilla dependency. Dockline owns protocol state, streams, cancellation and transfer behavior. A scoped connection owns its resources until its callback finishes.
 
 ## Layout and ownership
 
 | Directory | Responsibility |
 | --- | --- |
-| `packages/core` | XML reading, `Server` model, selection, metadata identities/snapshots and enums |
-| `packages/cli` | Saved-site queries, guarded preview/sync/apply/status, read-only connection checks and transfer recipes |
-| `packages/connector-abstract` | FileZilla factory/registry contracts and shared Dockline exports |
-| `packages/connector-ftp` | FileZilla FTP/FTPS configuration mapping |
-| `packages/connector-sftp` | FileZilla SFTP configuration mapping and host-key import |
-| scripts | Build, package and consumer validation |
-| docs | Independently built VitePress documentation |
+| `packages/core` | Native reading, profiles, credentials, trusted-key snapshots, identities and writer factory |
+| `packages/cli` | Profile queries, guarded writes and explicit connection checks through the shared integration |
+| Private test workspaces | Dockline protocol regression fixtures and tests; not published connector packages |
+| `scripts` | Build, package and consumer validation |
+| `docs` | Independently built VitePress documentation |
 
-## State and resources
-
-`SiteManager` retains normalized `Server` objects rather than original XML. JSON projections redact passwords; explicitly selected credential properties remain accessible. Remote-directory decoding stays lazy until requested or mapped for connection use.
-
-Dockline owns protocol state, streams, cancellation and retry behavior. A returned read belongs to its caller until consumed or cancelled. SDK local-file methods own their local handles and await completion. `withConnection` owns the session for its callback lifetime.
-
-`FileZillaHostKeyStore` reads FileZilla's modern `hostkeys.xml`; it does not write approvals or copy insecure algorithm policy. `SiteIdentityStore` offers explicit JSON import/export with application-owned persistence. See [security](/guide/security) and [Dockline integration](/guide/dockline).
+`FileZillaHostKeyStore` reads modern FileZilla host keys without changing trust approvals. Identity JSON persistence is application-owned. [Connection architecture](/guide/dockline) describes execution and trust boundaries.

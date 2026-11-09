@@ -4,7 +4,7 @@ For normal saved-site transfers, start with [the complete program](/guide/quick-
 
 ## Verified SFTP setup
 
-The source's `createPinnedSftp(server, fingerprint)` translates a selected native site and requires an independently verified canonical SHA256 fingerprint. Copy and review the source when choosing that policy; do not import a nonexistent local `./transfer-recipes.js` file.
+The source's asynchronous `createPinnedSftp(bridge, profile, fingerprint)` uses the shared bridge with an independently verified canonical SHA256 fingerprint. The bridge owns selected credential resolution; the recipe accepts either a normalized profile or an exact source path. Copy and review the source when choosing that policy; do not import a nonexistent local `./transfer-recipes.js` file.
 
 ## Download to a new local file
 

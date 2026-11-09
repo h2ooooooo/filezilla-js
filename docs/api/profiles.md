@@ -114,9 +114,9 @@ Metadata only; credentials unresolved.
 
 ## Select, search and sync
 
-`source.get(path)` selects an exact canonical profile; `source.search(term, options)` returns matching metadata. `source.list()` supplies normalized intent for supported writers and sync workflows. Native CLI query JSON and compact list output are different representations and cannot be used as normalized write intent.
+`source.get(path)` selects an exact canonical profile; `source.search(term, options)` returns matching metadata. `source.list()` supplies complete supported connection definitions for shared execution and supported writing workflows. Execution settings may exceed the native writer's supported intent: explicit passive mode, filename encoding, trust pins and unsupported native requirements cause write planning to refuse the profile. See [execution settings and write intent](/api/writing#execution-settings-and-write-intent). Native CLI query JSON and compact list output are different representations and cannot be used as normalized write intent.
 
-For shared contracts use [Portline](https://h2ooooooo.github.io/portline/connection-profiles). FileZilla keeps its own reader, writer factory, CLI and Dockline mapping. See [preview/apply](/api/writing) before changing native settings.
+For shared contracts use [Portline](https://h2ooooooo.github.io/portline/connection-profiles). FileZilla keeps its own reader, native credential/trust providers, writer factory and CLI. The shared Portline–Dockline bridge handles execution mapping. See [preview/apply](/api/writing) before changing native settings.
 
 
 ## Profile model and credential references

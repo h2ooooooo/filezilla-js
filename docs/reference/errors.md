@@ -2,7 +2,25 @@
 
 The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
-Import shared connector errors from `@jalsoedesign/dockline-abstract`. Dockline protocol clients re-export relevant shared constructors. FileZilla connector integrations do not re-export them. Compatible installed copies preserve `instanceof` identity. Core metadata errors and the SFTP known-hosts conflict subclass are described separately below.
+Import shared connector errors from `@jalsoedesign/dockline-abstract`. Dockline protocol clients re-export relevant shared constructors. The FileZilla core reader does not re-export transport errors. Compatible installed copies preserve `instanceof` identity. Core metadata errors and the SFTP known-hosts conflict subclass are described separately below.
+
+## Shared bridge failures
+
+Import `ProfileExecutionError` from `@jalsoedesign/portline-dockline` and inspect its `code`. These errors describe profile preparation and client loading, separately from Dockline transport failures.
+
+| Code | Meaning |
+| --- | --- |
+| `PROFILE_NOT_FOUND` | The exact profile path is absent from the selected source. |
+| `CONNECTION_SELECTION_REQUIRED` | Several compatible definitions exist; supply `connectionId`. |
+| `UNSUPPORTED_PROFILE` | A saved requirement, authentication mode, TLS choice or SSH hop cannot be executed faithfully. |
+| `MISSING_CREDENTIAL` | Supply the credential, prompt or authentication handler required by the selected definition. |
+| `MISSING_TRUST` | Supply a canonical verified fingerprint, saved pins or an explicit trust callback. |
+| `MISSING_HANDLER` | Install the package named in the error's installation command. |
+| `INVALID_PROFILE` | Correct the invalid endpoint or malformed trust pins. |
+
+Missing protocol clients are never installed automatically. A broken installed client retains its original loading error. Fingerprints must be canonical unpadded SHA256 strings; saved pins must be an array. Unsupported settings must be corrected or explicitly supplied through supported runtime options, rather than bypassed.
+
+`FileZillaHostKeyStoreError` from `@jalsoedesign/filezilla-core` extends ordinary `Error` and identifies native trusted-key validation failures. Filesystem errors retain their Node error identity.
 
 ## Shared hierarchy
 
@@ -64,7 +82,7 @@ Identity-store schema/configuration validation uses `TypeError`. Reconciliation 
 
 ## Managed host-store failures
 
-`KnownHostsConflictError` is exported by `@jalsoedesign/dockline-sftp-client` and extends `HostTrustError`. Its zero-argument constructor indicates that the trusted record changed while approval was pending. Inspect and ask for approval against the new state; do not repeat an old approval. Store validation/locking can throw `ConnectorError`, cancellation uses `OperationAbortedError`, and filesystem failures may retain their ordinary Node error identity. See [managed known hosts](/guide/ssh-options#managed-known-hosts-storage).
+`KnownHostsConflictError` is exported by `@jalsoedesign/dockline-sftp-client` and extends `HostTrustError`. Its zero-argument constructor indicates that the trusted record changed while approval was pending. Inspect and ask for approval against the new state; do not repeat an old approval. Store validation/locking can throw `ConnectorError`, cancellation uses `OperationAbortedError`, and filesystem failures may retain their ordinary Node error identity. See [Dockline host trust](https://h2ooooooo.github.io/dockline/guide/sftp).
 
 ## Recovery boundaries
 

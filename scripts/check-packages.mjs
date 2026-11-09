@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {publicWorkspaceArguments} from './public-workspaces.mjs';
 import {existsSync, readFileSync, readdirSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {createRequire} from 'node:module';
@@ -15,7 +16,7 @@ if (!npmCli) {
 const result = spawnSync(process.execPath, [
     npmCli,
     'pack',
-    '--workspaces',
+    ...await publicWorkspaceArguments(repository),
     '--dry-run',
     '--ignore-scripts',
     '--json',
@@ -32,11 +33,13 @@ const workspacePackages = new Map(readdirSync(path.join(repository, 'packages'))
     const manifest = JSON.parse(readFileSync(path.join(packageDirectory, 'package.json'), 'utf8'));
 
     return [manifest.name, {directory, packageDirectory, manifest}];
-}));
+}).filter(([, workspace]) => !workspace.manifest.private));
 
-assert.equal(packages.length, workspacePackages.size, 'All workspace packages must be inspected');
+const publicPackages = packages.filter(packed => workspacePackages.has(packed.name));
 
-for (const packed of packages) {
+assert.equal(publicPackages.length, workspacePackages.size, 'All public workspace packages must be inspected');
+
+for (const packed of publicPackages) {
     const workspace = workspacePackages.get(packed.name);
 
     assert.ok(workspace, `${packed.name}: unknown workspace`);
@@ -54,14 +57,8 @@ for (const packed of packages) {
         assert.ok(files.includes(required), `${packed.name}: missing ${required}`);
     }
 
-    const expectedDocklineDependency = {
-        'connector-abstract': '@jalsoedesign/dockline-abstract',
-        'connector-ftp': '@jalsoedesign/dockline-ftp-client',
-        'connector-sftp': '@jalsoedesign/dockline-sftp-client',
-    }[packageName];
     const docklineDependencies = Object.keys(manifest.dependencies ?? {}).filter(name => name.startsWith('@jalsoedesign/dockline-'));
-
-    const expectedDocklineDependencies = expectedDocklineDependency ? [...new Set(['@jalsoedesign/dockline-abstract', expectedDocklineDependency])] : packageName === 'cli' ? ['@jalsoedesign/dockline-abstract'] : [];
+    const expectedDocklineDependencies = packageName === 'cli' ? ['@jalsoedesign/dockline-abstract'] : [];
 
     assert.deepEqual(docklineDependencies.sort(), expectedDocklineDependencies.sort());
 

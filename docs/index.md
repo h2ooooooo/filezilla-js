@@ -33,8 +33,8 @@ Use `filezilla-js` to list, search and inspect saved sites, explicitly check a c
 
 ## Where FileZilla ends and Dockline begins
 
-FileZilla factories map native protocol, authentication, key path, starting directory, charset and supported TLS/SSH settings. [Dockline](https://h2ooooooo.github.io/dockline/api/) performs transfers, manages sessions and runs SSH commands. [Dockline Keys](https://h2ooooooo.github.io/dockline/keys/) independently inspects and converts keys, including PPK v2/v3. [Portline](https://h2ooooooo.github.io/portline/) supplies shared profile contracts and writing safeguards.
+FileZilla core interprets native protocol, authentication, key path, starting directory and charset into Portline definitions. The shared Portline–Dockline bridge converts them for execution. [Dockline](https://h2ooooooo.github.io/dockline/api/) performs transfers, manages sessions and runs SSH commands. [Dockline Keys](https://h2ooooooo.github.io/dockline/keys/) independently inspects and converts keys, including PPK v2/v3. [Portline](https://h2ooooooo.github.io/portline/) supplies shared profile contracts and writing safeguards.
 
-No FileZilla connector class is needed for a generic connection: import Dockline directly. Use a FileZilla factory when starting from a saved `Server`.
+For saved sites, use `FileZillaProfileSource` with the optional shared `@jalsoedesign/portline-dockline` bridge. For generic connections, import Dockline directly.
 
 Throughout these docs, **the host** is the machine running Node.js or the CLI; **the server** is the FTP/SSH endpoint. A FileZilla selection path, an XML `source path` and a remote file path are different concepts.

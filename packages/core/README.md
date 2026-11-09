@@ -15,7 +15,7 @@ Read and query FileZilla `sitemanager.xml` files from TypeScript or JavaScript p
 Use Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Install from the public npm registry.
 
 ```bash
-npm install @jalsoedesign/filezilla-core
+npm install @jalsoedesign/filezilla-core@rc
 ```
 
 ## Quick Start
@@ -53,12 +53,15 @@ For terminal searches, install [the CLI](../cli/README.md) and run `filezilla-js
 - **Import reports:** Optional tolerant mode returns independent valid sites and redacted diagnostics.
 - **Identity and metadata:** Explicit stable-ID reconciliation plus versioned immutable snapshots and precise diffs.
 
-## Connectors
+## Shared connections
 
-While `@jalsoedesign/filezilla-core` handles the configuration parsing, you can use the dedicated connectors to interact with the files:
+`FileZillaProfileSource` exposes complete Portline connection definitions and resolves selected credentials on request. Install `@jalsoedesign/portline-dockline` plus the Dockline FTP, SFTP or SSH client needed for execution. Core does not install transport code.
 
-- [`@jalsoedesign/filezilla-connector-ftp`](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-ftp) - Translate saved FTP/FTPS sites into Dockline configurations or adapters.
-- [`@jalsoedesign/filezilla-connector-sftp`](https://www.npmjs.com/package/@jalsoedesign/filezilla-connector-sftp) - Translate saved SFTP sites and read FileZilla trusted-key metadata.
+`FileZillaHostKeyStore` reads an explicit modern FileZilla trusted-key snapshot for shared host verification. See the [saved-site walkthrough](https://h2ooooooo.github.io/filezilla-js/guide/quick-start).
+
+The same source works with `bridge.withSsh` after installing `@jalsoedesign/dockline-ssh-client`; see the [complete SSH command program](https://h2ooooooo.github.io/filezilla-js/guide/ssh). A saved SFTP endpoint must permit command execution. `toConfig` and `toSshConfig` resolve explicit selections without opening sockets; resulting configuration can contain secrets and must not be logged.
+
+Writing and execution use the same normalized definitions but support different fields. Native write planning refuses explicit passive settings, filename encoding, saved trust pins and unsupported native requirements rather than discarding them. Construct supported write intent deliberately; see [writing limits](https://h2ooooooo.github.io/filezilla-js/development/profile-writing#execution-settings-and-write-intent).
 
 ## Documentation
 

@@ -2,9 +2,8 @@ import {createReadStream} from 'node:fs';
 import {open, stat, unlink} from 'node:fs/promises';
 import {Transform} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
-import type {Server} from '@jalsoedesign/filezilla-core';
-import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
-import {type SftpConnector} from '@jalsoedesign/dockline-sftp-client';
+import type {ConnectionProfile} from '@jalsoedesign/portline-abstract';
+import type {DocklineBridge} from '@jalsoedesign/portline-dockline';
 import {checkAbort, IntegrityError, NotSupportedError, publishFile, ResourceLimitError, toReadable, type ConnectorOperationOptions, type PublicationResult, type TransferConnector} from '@jalsoedesign/dockline-abstract';
 
 export interface RecipeConnector extends TransferConnector {
@@ -13,29 +12,39 @@ export interface RecipeConnector extends TransferConnector {
 }
 
 /** The caller supplies an independently verified public fingerprint and owns saved credentials. */
-export function createPinnedSftp(server: Server, fingerprint: string): SftpConnector {
+export async function createPinnedSftp(
+    bridge: DocklineBridge,
+    profile: ConnectionProfile | string,
+    fingerprint: string,
+): Promise<RecipeConnector> {
     if (!/^SHA256:[A-Za-z0-9+/]{43}$/.test(fingerprint)) {
         throw new TypeError('Provide a canonical, independently verified SHA256 host-key fingerprint.');
     }
 
-    return SftpConnectorFactory.fromServer(server, {
-        requireTrustPolicy: true,
-        hasTrustPolicy: challenge => challenge.fingerprint === fingerprint,
-        acceptTrustPolicy: () => false,
+    const config = await bridge.toConfig(profile, {
+        hostFingerprint: fingerprint,
         autoReconnect: false,
         maxTransientRetries: 0,
     });
+
+    if (config.protocol !== 'sftp') {
+        throw new NotSupportedError('This pinned SFTP recipe requires an SSH/SFTP connection definition.');
+    }
+
+    const {createConnector} = await import('@jalsoedesign/dockline-sftp-client');
+
+    return createConnector(config);
 }
 
 /** The callback must await complete stream consumption before returning. */
 export async function withConnectedSite<T>(
-    createConnector: () => RecipeConnector,
+    createConnector: () => RecipeConnector | Promise<RecipeConnector>,
     options: ConnectorOperationOptions,
     operation: (connector: RecipeConnector) => Promise<T>,
 ): Promise<T> {
     checkAbort(options.abortSignal);
 
-    const connector = createConnector();
+    const connector = await createConnector();
     let operationFailed = false;
     let operationError: unknown;
     let value: T | undefined;
@@ -73,7 +82,7 @@ export interface DownloadRecipeOptions extends ConnectorOperationOptions {
 
 /** Creates a new local file exclusively. Failure removes only the file this invocation created. */
 export async function downloadToNewFile(
-    createConnector: () => RecipeConnector,
+    createConnector: () => RecipeConnector | Promise<RecipeConnector>,
     remotePath: string,
     localPath: string,
     options: DownloadRecipeOptions = {},
@@ -150,7 +159,7 @@ export interface PublishRecipeOptions extends ConnectorOperationOptions {
 
 /** Publishes to a new remote name with overwrite:'fail'; deployment replacement policy stays with the application. */
 export async function publishNewFile(
-    createConnector: () => RecipeConnector,
+    createConnector: () => RecipeConnector | Promise<RecipeConnector>,
     localPath: string,
     remotePath: string,
     options: PublishRecipeOptions = {},

@@ -88,7 +88,7 @@ Specifies the character encoding used by the server.
 | `1`   | `ENCODING_CUSTOM` |
 | `2`   | `ENCODING_AUTO`   |
 
-These are saved metadata values, not proof of connector support. See the [factory logon matrix](../../../docs/reference/factories.md) and [current enum reference](../../../docs/reference/enums.md).
+These are saved metadata values, not proof of execution support. FileZilla core interprets them into Portline definitions; the optional shared bridge executes supported definitions. See the [normalized authentication matrix](../../../docs/reference/enums.md#normalized-authentication-and-execution) and [shared connection API](../../../docs/reference/factories.md).
 
 ## ServerFormat
 

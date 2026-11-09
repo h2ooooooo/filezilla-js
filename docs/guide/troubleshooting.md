@@ -25,6 +25,11 @@
 | `KnownHostsConflictError` after approval | Reload the current trusted identity and review it again; the old approval is stale. |
 | A streamed checksum/copy reaches `ResourceLimitError` | Review the explicitly configured connector/call `maxBytes` limit. Size is unlimited by default; per-call `Infinity` removes an inherited limit. |
 | Check refuses an unattended SFTP site | Supply an independently verified host-key pin and the selected saved password/key or redirected password input. Check never approves trust automatically. |
+| `MISSING_HANDLER` or CLI `client-not-installed` | Install the exact Dockline protocol client named by the error in the same project as the bridge; global CLI clients belong in the same global installation. |
+| `CONNECTION_SELECTION_REQUIRED` | Inspect `profile.connections` and supply the intended `connectionId`. |
+| `MISSING_TRUST` or invalid fingerprint | Use an independently verified canonical unpadded SHA256 fingerprint or an explicit trust provider. |
+| Unsupported native settings or SSH hops | The bridge refuses a route or policy it cannot preserve. Choose a supported definition or supply a supported explicit override; it never connects directly around a required proxy. |
+| Native write refuses execution settings | Build separate supported write intent; encoding, explicit passive mode and trust pins are not silently removed. |
 | Docs assets are missing after a rebuild | Restart the preview server; development mode reloads Markdown automatically. |
 
 ## Report a reproducible issue

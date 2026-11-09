@@ -1,65 +1,6 @@
 import {describe, it, expect} from 'vitest';
-import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {SftpConnectorFactory} from '../src/index.js';
 import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
-import {AuthError, NotFoundError, PermissionError, UnsupportedProtocolError, NotSupportedError} from '@jalsoedesign/dockline-abstract';
-
-function createMockServer(props: Partial<any> = {}): Server {
-    const defaultProps = {
-        host: 'localhost',
-        port: 22,
-        protocol: ServerProtocol.SFTP,
-        logonType: LogonType.normal,
-        user: 'test',
-        password: 'password',
-        remoteDirectory: '',
-        name: 'Test Server',
-    };
-
-    return new Server({...defaultProps, ...props} as any, 'Test Server');
-}
-
-describe('SftpConnectorFactory.fromServer - protocol mapping', () => {
-    it('maps SFTP correctly', () => {
-        const server = createMockServer({protocol: ServerProtocol.SFTP});
-        const connector = SftpConnectorFactory.fromServer(server);
-
-        expect(connector).toBeInstanceOf(SftpConnector);
-    });
-
-    it('throws for FTP', () => {
-        const server = createMockServer({protocol: ServerProtocol.FTP});
-
-        expect(() => SftpConnectorFactory.fromServer(server)).toThrow(UnsupportedProtocolError);
-    });
-});
-
-describe('SftpConnectorFactory.fromServer - logon type guards', () => {
-    it('throws for LogonType.anonymous', () => {
-        const server = createMockServer({logonType: LogonType.anonymous});
-
-        expect(() => SftpConnectorFactory.fromServer(server)).toThrow(NotSupportedError);
-    });
-
-    it('throws for LogonType.ask', () => {
-        const server = createMockServer({logonType: LogonType.ask});
-
-        expect(() => SftpConnectorFactory.fromServer(server)).toThrow(NotSupportedError);
-    });
-
-    it('handles LogonType.key with non-empty keyFile', () => {
-        const server = createMockServer({logonType: LogonType.key, keyFile: 'path/to/key'});
-        const connector = SftpConnectorFactory.fromServer(server);
-
-        expect((connector as any).config.privateKeyPath).toBe('path/to/key');
-    });
-
-    it('throws for LogonType.key with empty keyFile', () => {
-        const server = createMockServer({logonType: LogonType.key, keyFile: ''});
-
-        expect(() => SftpConnectorFactory.fromServer(server)).toThrow(NotSupportedError);
-    });
-});
+import {AuthError, NotFoundError, PermissionError} from '@jalsoedesign/dockline-abstract';
 
 describe('error mapping', () => {
     it('maps "Authentication failed" to AuthError', () => {

@@ -1,6 +1,6 @@
 # Storage adapter API
 
-The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla supplies complete Portline definitions and native host-key import; the shared integration supplies Dockline mapping. See [connection architecture](/guide/dockline).
 
 Both connectors implement Flystorage's `StorageAdapter` and extend applicable options with `ConnectorOperationOptions`. For portable direct calls, pass `{}` and use `{deep: false}` for shallow listing. FTP signatures require their operation options; SFTP supplies defaults for many operations. `connect(options?)` takes shared controls; `disconnect()` does not.
 

@@ -4,12 +4,9 @@ import {once} from 'node:events';
 import {mkdtemp, writeFile, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
-import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {FileZillaHostKeyStore} from '@jalsoedesign/filezilla-core';
 import {AuthError, HostTrustError, NotFoundError, PermissionError, NotSupportedError, OperationAbortedError} from '@jalsoedesign/dockline-abstract';
 import {SftpConnector, type SftpConnectorConfig} from '@jalsoedesign/dockline-sftp-client';
-import {SftpConnectorFactory} from '../src/index.js';
-import {FileZillaHostKeyStore} from '../src/index.js';
 import {createLocalSftp} from './local-sftp.js';
 
 let endpoint: Awaited<ReturnType<typeof createLocalSftp>>;
@@ -72,45 +69,6 @@ describe('isolated SFTP protocol integration', () => {
         } finally {
             await rm(directory, {recursive: true, force: true});
         }
-    });
-
-    it('pins the real server key through static and instance factories before sending credentials', async () => {
-        const server = new Server({
-            host: '127.0.0.1',
-            port: endpoint.port,
-            protocol: ServerProtocol.SFTP,
-            logonType: LogonType.normal,
-            user: 'fixture',
-            password: 'fixture-password',
-            name: 'Synthetic SFTP',
-        } as any, 'Synthetic SFTP');
-        const lookup = vi.fn(async (challenge) => {
-            expect(challenge.host).toBe('127.0.0.1');
-            expect(challenge.port).toBe(endpoint.port);
-            expect(challenge.fingerprint).toBe(endpoint.fingerprint);
-
-            return true;
-        });
-        const prompt = vi.fn(async () => false);
-        const factory: ConnectorFactory<
-            SftpConnector,
-            Parameters<typeof SftpConnectorFactory.fromServer>[1]
-        > = new SftpConnectorFactory();
-
-        for (const connector of [
-            factory.fromServer(server, {requireTrustPolicy: true, hasTrustPolicy: lookup, acceptTrustPolicy: prompt}),
-            SftpConnectorFactory.fromServer(server, {
-                requireTrustPolicy: true,
-                hasTrustPolicy: lookup,
-                acceptTrustPolicy: prompt,
-            }),
-        ]) {
-            adapters.push(connector);
-            expect(await connector.fileExists('/large.bin')).toBe(true);
-        }
-
-        expect(lookup).toHaveBeenCalledTimes(2);
-        expect(prompt).not.toHaveBeenCalled();
     });
 
     it('rejects unknown or explicitly rejected keys before password authentication', async () => {

@@ -2,7 +2,7 @@
 
 ## Repository and configuration boundary
 
-FileZilla core owns reading and metadata. FileZilla factories own conversion to plain Dockline configuration and retain the old disconnected-adapter API. Dockline owns the protocol implementation and generic transfer tools. FileZilla exports only its native settings integration; explicit native XML changes use the separate guarded Portline writer factory.
+FileZilla core owns native interpretation, complete Portline profiles, credential resolution and host-key import. The shared Portline–Dockline bridge owns configuration conversion and scoped connection APIs. Dockline owns the protocol implementation and generic transfer tools. FileZilla exports only its native settings integration; explicit native XML changes use the separate guarded Portline writer factory.
 
 ## Reading and selecting
 
@@ -15,11 +15,11 @@ FileZilla core owns reading and metadata. FileZilla factories own conversion to 
 
 ## Connecting and trust
 
-- Factories support static/instance methods with options and return disconnected adapters.
+- Shared bridge methods asynchronously prepare configuration, create disconnected adapters or scope connected sessions.
 - FTP 0/4 require explicit TLS, 3 implicit TLS and 6 plaintext. Active FTP remains unsupported.
 - SFTP accepts password, key, explicit agent and string/callback keyboard-interactive authentication, plus credential providers, raw-key verification and optional required has/accept trust callbacks.
 - Site settings alone are not host trust. The modern FileZilla importer remains read-only. Optional `KnownHostsStore` persistence requires explicit first-use/changed-key approval; the library never silently accepts a newly observed key.
-- Unconfigured SFTP compatibility behavior still accepts keys because `requireTrustPolicy` is opt-in.
+- The shared integration requires accepted host verification; missing trust never silently accepts an SSH key.
 - FTP queues full operations; SFTP coalesces connection setup and tracks active lifetimes. A separate `ConnectorPool` bounds all leased sessions, including metadata and directory work.
 
 ## Transfer and recovery

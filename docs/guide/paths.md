@@ -1,6 +1,6 @@
 # Paths and metadata
 
-The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
+The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla supplies complete Portline definitions and native host-key import; the shared integration supplies Dockline mapping. See [connection architecture](/guide/dockline).
 
 | Path concept | Meaning | Example |
 | --- | --- | --- |

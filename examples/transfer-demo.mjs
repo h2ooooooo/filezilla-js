@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFile, writeFile} from 'node:fs/promises';
 import path from 'node:path';
-import {Dockline} from '@jalsoedesign/dockline-core';
-import {getSiteManager} from '@jalsoedesign/filezilla-core';
-import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
-import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {FileZillaProfileSource} from '@jalsoedesign/filezilla-core';
+import {createDocklineBridge} from '@jalsoedesign/portline-dockline';
 import {invokeCli, localServer, repository, temporaryDemo} from './demo-support.mjs';
 
 export async function runTransferDemo(protocol) {
@@ -50,22 +48,19 @@ export async function runTransferDemo(protocol) {
                 console.log('Wrong host-key pin rejected (exit 3).');
             }
 
-            const site = getSiteManager(file).getServerByPath('Demo');
-            const config = protocol === 'sftp' ? SftpConnectorFactory.toConfig(site, {
-                requireTrustPolicy: true,
-                hasTrustPolicy: challenge => challenge.fingerprint === server.fingerprint,
-                acceptTrustPolicy: () => false,
-            }) : FtpConnectorFactory.toConfig(site);
+            const source = FileZillaProfileSource.fromFile(file);
+            const bridge = createDocklineBridge({source});
+            const options = protocol === 'sftp' ? {hostFingerprint: server.fingerprint} : {};
             const bytes = Buffer.from('Hello from FileZilla!\n');
 
             await writeFile(path.join(directory, 'input.txt'), bytes);
-            await Dockline.withConnection(config, async remote => {
+            await bridge.withFiles('Demo', async remote => {
                 await remote.uploadFile(path.join(directory, 'input.txt'), 'hello.txt');
                 console.log('SDK upload: hello.txt (21 bytes).');
                 await remote.downloadFile('hello.txt', path.join(directory, 'output.txt'));
                 assert.deepEqual(await readFile(path.join(directory, 'output.txt')), bytes);
                 console.log('SDK download: exact bytes verified.');
-            });
+            }, options);
             console.log('PASS: FileZilla configuration -> local ' + protocol.toUpperCase() + ' connection and transfers.');
         } finally {
             await server.close();

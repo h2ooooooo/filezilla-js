@@ -1,4 +1,5 @@
 import {checkLockfile} from './check-lockfile.mjs';
+import {publicWorkspaceArguments} from './public-workspaces.mjs';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {readFile, readdir} from 'node:fs/promises';
@@ -118,7 +119,7 @@ assert.ok(npmCli, 'Run through npm run check:publication');
 const result = spawnSync(process.execPath, [
     npmCli,
     'pack',
-    '--workspaces',
+    ...await publicWorkspaceArguments(repository),
     '--dry-run',
     '--ignore-scripts',
     '--json',

@@ -20,15 +20,16 @@ Read FileZilla Site Manager data, select saved sites, map them into Dockline con
 | Inspect malformed records and keep stable selections | [Import workflows](/guide/import-workflows) |
 | Read normalized Portline metadata | [Normalized profiles](/api/profiles) |
 | Connect and transfer through a saved FTP/SFTP site | [Saved-site walkthrough](/guide/quick-start) |
+| Run SSH commands through a saved SFTP endpoint | [SSH walkthrough](/guide/ssh) |
 | Import FileZilla's explicit trusted host records | [SFTP and host trust](/guide/sftp) |
 | Preview a native profile change | [Writing API](/api/writing) |
 
 ## Advanced usage
 
-Read [FileZilla-to-Dockline mapping](/api/integration) before choosing a factory. Then explore [FTP/TLS mapping](/guide/ftp), [SSH credentials and trust](/guide/ssh-options), [path semantics](/guide/paths), [registered providers and pools](/guide/connection-pools), and [typed errors](/guide/errors).
+Read [FileZilla-to-Dockline mapping](/api/integration) before opening a shared connection. Then explore [FTP/TLS mapping](/guide/ftp), [SSH credentials and trust](/guide/ssh-options), [path semantics](/guide/paths), [connection pools](/guide/connection-pools), and [typed errors](/guide/errors).
 
 Generic transfer methods, SSH execution and key conversion are documented by [Dockline](https://h2ooooooo.github.io/dockline/api/) and [Dockline Keys](https://h2ooooooo.github.io/dockline/keys/).
 
 ## Reference
 
-Look up [public exports](/reference/public-api), [`SiteManager`](/reference/site-manager), [Server](/reference/server), [factories](/reference/factories), or [exact TypeScript declarations](/reference/types). [CLI documentation](/cli/) is a separate journey.
+Look up [public exports](/reference/public-api), [`SiteManager`](/reference/site-manager), [Server](/reference/server), [shared connections](/reference/factories), or [exact TypeScript declarations](/reference/types). [CLI documentation](/cli/) is a separate journey.

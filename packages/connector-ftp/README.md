@@ -1,13 +1,5 @@
-# @jalsoedesign/filezilla-connector-ftp
+# Private FTP regression workspace
 
-Maps saved FileZilla FTP/FTPS sites to Dockline. Public exports are FtpConnectorFactory and FtpConnectorFactoryOptions. The factory maps protocol/TLS, host/account, authentication mode, starting directory, passive mode and filename encoding; unsupported saved modes are refused.
+This workspace retains Dockline protocol regression tests and local fixtures. It is private and is excluded from public package inventories.
 
-Use FtpConnectorFactory.toConfig(site, options) with Dockline.withConnection for scoped SDK transfers. FtpConnectorFactory.fromServer(site, options) returns a disconnected Dockline adapter when explicit adapter lifecycle is needed. Both static and instance methods are available.
-
-For a generic connection, import FtpConnector from @jalsoedesign/dockline-ftp-client directly. This FileZilla package does not export generic connector classes, types or errors.
-
-See the [complete saved-site example](https://h2ooooooo.github.io/filezilla-js/guide/quick-start), [import migration](https://h2ooooooo.github.io/filezilla-js/guide/dockline), [exact signatures](https://h2ooooooo.github.io/filezilla-js/reference/types) and [local runnable examples](https://h2ooooooo.github.io/filezilla-js/guide/local-demo).
-
-## License
-
-MIT.
+FileZilla native settings are normalized by `@jalsoedesign/filezilla-core`. Shared connection conversion and scoped execution use `@jalsoedesign/portline-dockline`, with independently installed Dockline protocol clients. See the [connection guide](https://h2ooooooo.github.io/filezilla-js/guide/dockline).

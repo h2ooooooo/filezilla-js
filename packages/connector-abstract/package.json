@@ -1,47 +1,26 @@
 {
-    "name": "@jalsoedesign/filezilla-connector-abstract",
+    "name": "@jalsoedesign/filezilla-test-abstract",
     "version": "2.0.0",
     "type": "module",
-    "description": "FileZilla-specific connector factory and numeric protocol registry",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "description": "Private abstract transport regression tests",
     "scripts": {
-        "build": "node ../../scripts/build-package.mjs",
-        "dev": "tsc --watch",
-        "lint": "eslint src tests --no-error-on-unmatched-pattern --max-warnings 0",
-        "prepack": "npm run build",
+        "lint": "eslint tests --no-error-on-unmatched-pattern --max-warnings 0",
         "test": "vitest run",
         "test:watch": "vitest"
     },
-    "peerDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.2.0"
-    },
     "devDependencies": {
-        "@jalsoedesign/filezilla-core": "^1.2.0",
+        "@flystorage/file-storage": "1.2.2",
+        "@jalsoedesign/dockline-abstract": "^1.1.0-rc.1",
+        "@jalsoedesign/portline-abstract": "^1.0.0-rc.1",
+        "@jalsoedesign/portline-core": "^1.0.0-rc.1",
+        "@jalsoedesign/filezilla-core": "^1.2.0-rc.1",
         "typescript": "6.0.3",
-        "vitest": "5.1.0"
+        "vitest": "5.1.0",
+        "@jalsoedesign/portline-dockline": "^1.0.0-rc.1"
     },
     "license": "MIT",
     "engines": {
         "node": ">=22.22.2"
-    },
-    "files": [
-        "dist",
-        "LICENSE",
-        "README.md"
-    ],
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "default": "./dist/index.js"
-        },
-        "./package.json": "./package.json"
-    },
-    "dependencies": {
-        "@flystorage/file-storage": "1.2.2",
-        "@jalsoedesign/dockline-abstract": "^1.1.0",
-        "@jalsoedesign/portline-abstract": "^1.0.0",
-        "@jalsoedesign/portline-core": "^1.0.0"
     },
     "repository": {
         "type": "git",
@@ -52,7 +31,5 @@
     "bugs": {
         "url": "https://github.com/h2ooooooo/filezilla-js/issues"
     },
-    "publishConfig": {
-        "access": "public"
-    }
+    "private": true
 }

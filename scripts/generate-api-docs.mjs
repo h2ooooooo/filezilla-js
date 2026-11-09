@@ -16,7 +16,7 @@ for (const directory of (await readdir(path.join(repository, 'packages'))).sort(
     const root = path.join(repository, 'packages', directory);
     const manifest = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 
-    if (!manifest.types) {
+    if (manifest.private || !manifest.types) {
         continue;
     }
 

@@ -14,7 +14,7 @@ The reader rejects DTD/entity declarations and malformed documents globally. Str
 
 For FTPS, keep certificate validation enabled and provide only trusted private CAs through `secureOptions`. Saved protocol `FTP` requires explicit TLS rather than silently falling back to plaintext.
 
-For SFTP, supply `hostVerifier`, or set `requireTrustPolicy: true` with both `hasTrustPolicy` and `acceptTrustPolicy`. The requirement is opt-in; an unconfigured compatibility connection still accepts host keys. If both verifier and callbacks are supplied, both layers must accept.
+For SFTP and SSH through the shared bridge, supply an independently verified fingerprint or an explicit shared trust provider. Missing or rejected trust fails the connection. Native saved credentials alone never establish host identity. Direct Dockline clients have their own trust options; configure them explicitly when bypassing the bridge.
 
 Trust decisions belong to the application. A Site Manager XML import is not a trusted-host import. Review first-use fingerprints and changed keys independently; persist only explicit acceptance. The [SFTP guide](/guide/sftp) describes the separate read-only FileZilla importer; [SSH options](/guide/ssh-options) covers optional managed persistence with explicit approvals and concurrency checks.
 

@@ -1,6 +1,6 @@
 {
     "name": "@jalsoedesign/filezilla-cli",
-    "version": "1.2.0",
+    "version": "1.2.0-rc.1",
     "type": "module",
     "description": "Command-line interface for querying FileZilla sitemanager.xml files",
     "main": "dist/index.js",
@@ -17,13 +17,11 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@jalsoedesign/portline-abstract": "^1.0.0",
-        "@jalsoedesign/filezilla-connector-abstract": "^2.0.0",
-        "@jalsoedesign/filezilla-connector-ftp": "^2.0.0",
-        "@jalsoedesign/filezilla-connector-sftp": "^2.0.0",
-        "@jalsoedesign/filezilla-core": "^1.2.0",
-        "@jalsoedesign/portline-cli": "^1.0.0",
-        "@jalsoedesign/dockline-abstract": "^1.1.0"
+        "@jalsoedesign/portline-abstract": "^1.0.0-rc.1",
+        "@jalsoedesign/filezilla-core": "^1.2.0-rc.1",
+        "@jalsoedesign/portline-cli": "^1.0.0-rc.1",
+        "@jalsoedesign/dockline-abstract": "^1.1.0-rc.1",
+        "@jalsoedesign/portline-dockline": "^1.0.0-rc.1"
     },
     "devDependencies": {
         "tsx": "4.23.15",
@@ -58,6 +56,7 @@
         "url": "https://github.com/h2ooooooo/filezilla-js/issues"
     },
     "publishConfig": {
-        "access": "public"
+        "access": "public",
+        "tag": "rc"
     }
 }

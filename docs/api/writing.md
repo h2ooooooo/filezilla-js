@@ -197,3 +197,9 @@ See [native writing safeguards](/development/profile-writing), [Portline's write
 The source and destination are the selected XML file on the host; this is a profile preview, not a server transfer. Read [normalized profiles](/api/profiles) to obtain intent from another supported source. Native query/list JSON is not normalized intent. Sync excludes credential values, private-key contents and host trust policy.
 
 Apply rechecks destination identity, revision, native process/lock availability and preview integrity before committing. An imported or stale preview is not permission to overwrite a changed destination. See [Portline writing and recovery](https://h2ooooooo.github.io/portline/profile-writing) for the full contract.
+
+## Execution settings and write intent
+
+Normalized profiles now retain more execution settings than native writers can save. The writer refuses profiles with nonempty `unsupportedOptions`, an explicit boolean `passive` setting, `filenameEncoding`, or saved host fingerprint pins. It does not silently discard those requirements. A default `passive: null` may be omitted. Use an intentionally constructed write profile containing only supported intent; keep the complete original definition for execution.
+
+Password-prompt authentication is represented by `prompt-password`, separately from keyboard-interactive `interactive`. Credential references and values are omitted from preview artifacts; saved host trust is never copied as an approval. See [Portline writing limits](https://h2ooooooo.github.io/portline/profile-writing).

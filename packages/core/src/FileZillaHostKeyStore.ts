@@ -1,13 +1,19 @@
 import {open} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
-import {ConnectorError} from '@jalsoedesign/dockline-abstract';
-import type {SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
+
+export interface FileZillaHostKeyChallenge {
+    readonly host: string;
+    readonly port: number;
+    readonly publicKey: Buffer;
+}
+
+export class FileZillaHostKeyStoreError extends Error {}
 
 const MAX_FILE_BYTES = 1024 * 1024;
 
-function invalidStore(): ConnectorError {
-    return new ConnectorError('Invalid FileZilla host-key store: expected a valid modern hostkeys.xml file');
+function invalidStore(): FileZillaHostKeyStoreError {
+    return new FileZillaHostKeyStoreError('Invalid FileZilla host-key store: expected a valid modern hostkeys.xml file');
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -57,7 +63,7 @@ export class FileZillaHostKeyStore {
             const info = await file.stat();
 
             if (!info.isFile() || info.size > MAX_FILE_BYTES) {
-                throw new ConnectorError('FileZilla host-key store must be a regular file no larger than 1 MiB');
+                throw new FileZillaHostKeyStoreError('FileZilla host-key store must be a regular file no larger than 1 MiB');
             }
 
             // Read at most the limit plus one byte, including if a file grows after stat.
@@ -75,7 +81,7 @@ export class FileZillaHostKeyStore {
             }
 
             if (length > MAX_FILE_BYTES) {
-                throw new ConnectorError('FileZilla host-key store must be no larger than 1 MiB');
+                throw new FileZillaHostKeyStoreError('FileZilla host-key store must be no larger than 1 MiB');
             }
 
             try {
@@ -203,7 +209,7 @@ export class FileZillaHostKeyStore {
     }
 
     /** Bound callback: safe to pass directly as connector hasTrustPolicy. */
-    readonly hasTrustPolicy = (challenge: SftpHostKeyChallenge): boolean => {
+    readonly hasTrustPolicy = (challenge: FileZillaHostKeyChallenge): boolean => {
         if (!Buffer.isBuffer(challenge.publicKey)) {
             return false;
         }
@@ -211,6 +217,11 @@ export class FileZillaHostKeyStore {
         const keys = this.entries.get(entryId(challenge.host, challenge.port));
 
         return keys?.some((key) => key.equals(challenge.publicKey)) ?? false;
+    };
+
+    /** Common trust-provider callback; only exact host, port and SHA-256 pins match. */
+    readonly verify = (challenge: {host: string; port: number; fingerprint: string}): boolean => {
+        return this.getKnownFingerprints(challenge.host, challenge.port).includes(challenge.fingerprint);
     };
 
     getKnownFingerprints(host: string, port: number): string[] {

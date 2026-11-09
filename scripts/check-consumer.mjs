@@ -1,4 +1,5 @@
 import {mkdtemp, readFile, writeFile, mkdir, copyFile} from 'node:fs/promises';
+import {publicWorkspaceArguments} from './public-workspaces.mjs';
 import {spawn} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
@@ -59,14 +60,15 @@ async function command(label, executable, args, cwd) {
 const packedOutput = await command('pack', process.execPath, [
     npmCli,
     'pack',
-    '--workspaces',
+    ...await publicWorkspaceArguments(repository),
     '--ignore-scripts',
     '--pack-destination',
     artifacts,
     '--json',
 ], repository);
 const packResult = JSON.parse(packedOutput);
-const packed = Array.isArray(packResult) ? packResult : Object.values(packResult);
+const packed = (Array.isArray(packResult) ? packResult : Object.values(packResult))
+    .filter(item => !item.name.startsWith('@jalsoedesign/filezilla-test-'));
 
 if (process.argv.includes('--artifacts')) {
     for (const item of await artifactPackages(argument('--artifacts'))) {
@@ -82,7 +84,10 @@ if (process.argv.includes('--artifacts')) {
 await writeFile(path.join(staging, 'pack-after.json'), JSON.stringify(packed, null, 2));
 
 const dependencies = {
-    '@jalsoedesign/dockline-core': '^1.1.0',
+    '@jalsoedesign/dockline-core': '^1.1.0-rc.1',
+    '@jalsoedesign/dockline-ftp-client': '^1.1.0-rc.1',
+    '@jalsoedesign/dockline-sftp-client': '^1.1.0-rc.1',
+    '@jalsoedesign/portline-dockline': '^1.0.0-rc.1',
     ...Object.fromEntries(packed.map((item) => [item.name, `file:${path.join(artifacts, item.filename).split(path.sep).join('/')}`])),
 };
 
@@ -104,65 +109,65 @@ await writeFile(path.join(directory, 'tsconfig.json'), JSON.stringify({
         noEmit: true,
         types: ['node'],
     },
-    include: ['consumer.ts', 'transfer-recipes.ts', 'features.ts', 'documented-*.ts'],
+    include: ['consumer.ts', 'transfer-recipes.ts', 'documented-*.ts'],
 }, null, 2));
 await writeFile(path.join(directory, 'consumer.ts'), `import {Readable} from 'node:stream';
-import {Server, SiteManager} from '@jalsoedesign/filezilla-core';
-import {ProfileConnectorFactory} from '@jalsoedesign/portline-abstract';
+import {Server, SiteManager, FileZillaProfileSource, FileZillaHostKeyStore} from '@jalsoedesign/filezilla-core';
 import {CredentialResolver, ProfileCatalog} from '@jalsoedesign/portline-core';
 import {createProfileCli} from '@jalsoedesign/portline-cli';
 import {createFileZillaCliSource} from '@jalsoedesign/filezilla-cli';
-import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
+import {createDocklineBridge} from '@jalsoedesign/portline-dockline';
 import {AuthError, type ConnectorOperationOptions} from '@jalsoedesign/dockline-abstract';
-import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
-import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
-import {SftpConnector, type SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
-import {SftpConnectorFactory, FileZillaHostKeyStore} from '@jalsoedesign/filezilla-connector-sftp';
-import {FileStorage} from '@flystorage/file-storage';
+import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
 import {Dockline, type TransferConfig} from '@jalsoedesign/dockline-core';
 const settings: ConnectorOperationOptions = {autoReconnect: true, maxTransientRetries: 3};
-const sftp = new SftpConnector({host: 'localhost', port: 22, username: 'fixture', initialPath: '', ...settings, requireTrustPolicy: true, hasTrustPolicy: async (key: SftpHostKeyChallenge) => key.fingerprint === 'fixture', acceptTrustPolicy: async () => false});
-const ftp = new FtpConnector({host: 'localhost', port: 21, user: 'fixture', password: '', secure: false, passive: true, initialPath: '', ...settings});
-const ftpFactory: ConnectorFactory<FtpConnector> = new FtpConnectorFactory();
-const sftpFactory: ConnectorFactory<SftpConnector> = new SftpConnectorFactory();
-const sharedFactory: ProfileConnectorFactory<Server, SftpConnector> = sftpFactory;
-const sharedCli = createProfileCli({name: 'consumer-js', loadSource: () => createFileZillaCliSource(new SiteManager({FileZilla3: {Servers: {}}}))});
-const storage = new FileStorage(sftp);
-const upload = () => sftp.write('fixture.txt', () => Readable.from('fixture'), settings);
-const savedConfig = (server: Server): TransferConfig => SftpConnectorFactory.toConfig(server, {requireTrustPolicy: true, hasTrustPolicy: () => false, acceptTrustPolicy: () => false});
-const transfer = (config: TransferConfig) => Dockline.withConnection(config, async remote => {
+const manager = new SiteManager({FileZilla3: {Servers: {}}});
+const source = new FileZillaProfileSource(manager);
+const bridge = createDocklineBridge({source});
+const sharedCli = createProfileCli({name: 'consumer-js', loadSource: () => createFileZillaCliSource(manager)});
+const savedConfig = (path: string) => bridge.toConfig(path, {hostFingerprint: 'SHA256:verified'});
+const files = (path: string) => bridge.withFiles(path, async remote => {
     await remote.uploadFile('./fixture.txt', 'fixture.txt');
     await remote.downloadFile('fixture.txt', './download.txt');
+}, {hostFingerprint: 'SHA256:verified'});
+const ssh = (path: string) => bridge.withSsh(path, session => session.exec('uname', ['-a']), {
+    hostFingerprint: 'SHA256:verified',
 });
-void [Server, SiteManager, AuthError, ftp, ftpFactory, sftpFactory, storage, upload, savedConfig, transfer, FileZillaHostKeyStore.fromFile,
-    sharedFactory, sharedCli, CredentialResolver, ProfileCatalog];
+const sftp = new SftpConnector({host: 'localhost', port: 22, username: 'fixture', initialPath: '',
+    ...settings, requireTrustPolicy: true, hasTrustPolicy: () => false, acceptTrustPolicy: () => false});
+const upload = () => sftp.write('fixture.txt', () => Readable.from('fixture'), settings);
+const transfer = (config: TransferConfig) => Dockline.withConnection(config, async remote => {
+    await remote.uploadFile('./fixture.txt', 'fixture.txt');
+});
+void [Server, SiteManager, AuthError, savedConfig, files, ssh, upload, transfer, FileZillaHostKeyStore.fromFile,
+    sharedCli, CredentialResolver, ProfileCatalog];
 `);
 await writeFile(path.join(directory, 'runtime.mjs'), `import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
+import {FileZillaProfileSource, FileZillaHostKeyStore} from '@jalsoedesign/filezilla-core';
+import {createDocklineBridge, DocklineBridge} from '@jalsoedesign/portline-dockline';
 const require = createRequire(import.meta.url);
-import {AuthError} from '@jalsoedesign/dockline-abstract';
-import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
-import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
-import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
-import {AuthError as DocklineAuthError} from '@jalsoedesign/dockline-abstract';
-import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
-import {SftpConnector} from '@jalsoedesign/dockline-sftp-client';
-import {ProfileConnectorFactory} from '@jalsoedesign/portline-abstract';
-import {CredentialResolver} from '@jalsoedesign/portline-core';
 assert.equal(typeof require('@jalsoedesign/filezilla-core').SiteManager, 'function');
-assert.equal(AuthError, DocklineAuthError);
-assert.deepEqual(Object.keys(await import('@jalsoedesign/filezilla-connector-abstract')).sort(), ['ConnectorFactory', 'ConnectorRegistry']);
-assert.deepEqual(Object.keys(await import('@jalsoedesign/filezilla-connector-ftp')), ['FtpConnectorFactory']);
-assert.deepEqual(Object.keys(await import('@jalsoedesign/filezilla-connector-sftp')).sort(), ['FileZillaHostKeyStore', 'SftpConnectorFactory']);
-await assert.rejects(() => import('@jalsoedesign/filezilla-connector-sftp/dist/SftpConnector.js'), {code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'});
-assert.ok(new FtpConnectorFactory() instanceof ConnectorFactory);
-assert.ok(new SftpConnectorFactory() instanceof ConnectorFactory);
-assert.ok(new SftpConnectorFactory() instanceof ProfileConnectorFactory);
+assert.equal(typeof FileZillaProfileSource.fromFile, 'function');
+assert.equal(typeof FileZillaHostKeyStore.fromFile, 'function');
 assert.equal(typeof require('@jalsoedesign/portline-core').ProfileCatalog, 'function');
-assert.equal(typeof CredentialResolver, 'function');
-assert.equal(typeof FtpConnectorFactory.fromServer, 'function');
-assert.equal(typeof SftpConnectorFactory.fromServer, 'function');
-console.log('Packed entry points, FileZilla-only exports and Dockline factory results passed');
+const bridge = createDocklineBridge();
+assert.ok(bridge instanceof DocklineBridge);
+for (const method of ['toConfig', 'createFileAdapter', 'withFiles', 'withSsh']) {
+    assert.equal(typeof bridge[method], 'function');
+}
+const profile = {
+    id: 'fixture', path: 'fixture', name: 'Fixture',
+    source: {id: 'fixture', application: 'FileZilla'},
+    diagnostics: [],
+    connections: [{id: 'primary', kind: 'ftp', protocol: 'ftp', tls: 'none',
+        endpoint: {host: '127.0.0.1', port: 21}, authentication: [{type: 'anonymous'}]}],
+};
+const config = await bridge.toConfig(profile);
+assert.equal(config.protocol, 'ftp');
+assert.equal(config.host, '127.0.0.1');
+assert.equal(config.username, 'anonymous');
+console.log('Packed public readers and shared bridge configuration passed');
 `);
 await command('install', process.execPath, [
     npmCli,
@@ -171,37 +176,9 @@ await command('install', process.execPath, [
     '--no-audit',
     '--no-fund',
 ], directory);
+
 await copyFile(path.join(directory, 'node_modules/@jalsoedesign/filezilla-cli/examples/transfer-recipes.ts'),
     path.join(directory, 'transfer-recipes.ts'));
-await writeFile(path.join(directory, 'removed-exports.ts'), `// @ts-expect-error Generic adapters are imported from Dockline directly.
-import {SftpConnector} from '@jalsoedesign/filezilla-connector-sftp';
-// @ts-expect-error Generic errors and pools are imported from Dockline directly.
-import {AuthError, ConnectorPool} from '@jalsoedesign/filezilla-connector-abstract';
-void [SftpConnector, AuthError, ConnectorPool];
-`);
-await writeFile(path.join(directory, 'features.ts'), `import {Readable} from 'node:stream';
-import {ConnectorPool, BandwidthBudget, NameResolutionError, PublicationError} from '@jalsoedesign/dockline-abstract';
-import {ConnectorRegistry} from '@jalsoedesign/filezilla-connector-abstract';
-import {SftpConnector, KnownHostsStore} from '@jalsoedesign/dockline-sftp-client';
-import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
-import {ServerProtocol, readSiteManagerReport, SiteIdentityStore, createMetadataSnapshot, diffMetadata} from '@jalsoedesign/filezilla-core';
-const make = () => new SftpConnector({host: 'localhost', port: 22, username: 'fixture', initialPath: '',
-    requireTrustPolicy: true, hasTrustPolicy: () => false, acceptTrustPolicy: () => false,
-    keyboardInteractive: 'fixture', agentForward: false, keepalive: {intervalMs: 30000, maxMissed: 3},
-    credentialProvider: async context => ({type: 'password', password: context.siteId ?? 'fixture'}),
-});
-const pool = new ConnectorPool({create: make, maxConnections: 3, serverMaxConnections: 2});
-const registry = new ConnectorRegistry();
-const registration = registry.register({protocols: [ServerProtocol.SFTP], factory: new SftpConnectorFactory()});
-const connector = make();
-const upload = () => connector.publishFile('fixture', () => Readable.from(['fixture']), {overwrite: 'replace',
-    requireAtomicRename: true, bandwidth: new BandwidthBudget({bytesPerSecond: 100000}), onProgress: event => void event.stage});
-const copy = () => connector.copyFileWithStrategy('fixture', 'fixture-copy', {overwrite: 'fail'});
-const digest = () => connector.checksumDetails('fixture', {strategy: 'stream', maxBytes: 1024});
-const inventory = () => connector.walk('.', {maxDepth: 3, maxEntries: 100});
-void [pool, registration, upload, copy, digest, inventory, KnownHostsStore.open, NameResolutionError, PublicationError,
-    readSiteManagerReport, SiteIdentityStore, createMetadataSnapshot, diffMetadata];
-`);
 
 const documentation = JSON.parse(await readFile(path.join(repository, 'docs/example-variants.json'), 'utf8'));
 

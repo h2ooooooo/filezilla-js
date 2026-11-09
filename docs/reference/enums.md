@@ -74,6 +74,19 @@ See [the exported enum source](https://github.com/h2ooooooo/filezilla-js/blob/ma
 
 See [the exported enum source](https://github.com/h2ooooooo/filezilla-js/blob/main/packages/core/src/enum/LogonType.ts) and [credential loading](/guide/site-manager#credentials-and-serialization) for the distinction between saved authentication metadata and supported secret access.
 
+## Normalized authentication and execution
+
+| Saved mode | Portline authentication | Shared execution requirement |
+| --- | --- | --- |
+| `anonymous` | `anonymous` | FTP only; SFTP/SSH rejects anonymous login |
+| `normal` | `password` with a credential reference | Resolve the selected saved password or supply a runtime password/provider |
+| `ask` | `prompt-password` with a credential reference | Supply an available password, `promptPassword` or another supported explicit authentication selection |
+| `interactive` | `interactive` | SSH/SFTP requires a `keyboardInteractive` handler; FTP refuses this mode |
+| `key` | `private-key` with a path and separate passphrase reference | Resolve the saved key path/passphrase or supply an explicit runtime selection; SSH commands require a key file path |
+| `account`, `profile`, `adc`, unknown values | `unsupported` with the native type | Preserved for inspection; execution is refused |
+
+Account-based FTP is not silently treated as ordinary password login. The reader distinguishes a key passphrase from a password, and password prompting from keyboard-interactive challenges. See [SSH credentials and trust](/guide/ssh-options) and the [shared bridge options](https://h2ooooooo.github.io/portline/integration/execution).
+
 ## Other enums
 
 | Enum | Members in numeric order, starting at zero |

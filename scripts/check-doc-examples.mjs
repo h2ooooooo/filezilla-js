@@ -6,6 +6,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
 import {localServer, temporaryDemo} from '../examples/demo-support.mjs';
+import {createSshDemoServer} from '../examples/ssh-demo-server.mjs';
 import {javascript, commonJs, unformattedTechnicalText} from './docs-example-utils.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
@@ -153,6 +154,7 @@ async function run(filename, directory, args, environment) {
 await temporaryDemo(async directory => {
     const ftp = await localServer('ftp', directory);
     const sftp = await localServer('sftp', directory);
+    const ssh = await createSshDemoServer();
     const checkRoot = path.join(docs, '.local-dev/example-checks');
 
     await mkdir(checkRoot, {recursive: true});
@@ -167,11 +169,11 @@ await temporaryDemo(async directory => {
             await mkdir(working);
 
             const xmlPath = path.join(working, 'sitemanager.xml');
-            const external = ['saved-sftp', 'saved-ftp', 'check-site'].includes(asset.name);
+            const external = ['saved-sftp', 'saved-ftp', 'saved-ssh', 'check-site'].includes(asset.name);
             let xml = fixture;
 
             if (external) {
-                const server = asset.name === 'saved-ftp' ? ftp : sftp;
+                const server = asset.name === 'saved-ftp' ? ftp : asset.name === 'saved-ssh' ? ssh : sftp;
 
                 xml = '<FileZilla3><Servers><Server><Host>127.0.0.1</Host><Port>' + server.port + '</Port><Protocol>' + (asset.name === 'saved-ftp' ? 6 : 1) + '</Protocol><Type>0</Type><User>fixture</User><Logontype>1</Logontype><Pass encoding="base64">Zml4dHVyZS1wYXNzd29yZA==</Pass><Name>Demo</Name></Server></Servers></FileZilla3>';
                 await writeFile(path.join(working, 'hello.txt'), 'Hello from FileZilla!\n');
@@ -183,11 +185,15 @@ await temporaryDemo(async directory => {
 
             await writeFile(sourceFile, await readFile(path.join(docs, 'public/examples', asset.filename)));
 
-            const output = await run(sourceFile, working, [xmlPath, ...(external ? ['Demo'] : [])], {SFTP_HOST_FINGERPRINT: sftp.fingerprint, NO_COLOR: '1'});
+            const output = await run(sourceFile, working, [xmlPath, ...(external ? ['Demo'] : [])], {
+                SFTP_HOST_FINGERPRINT: sftp.fingerprint,
+                SSH_HOST_FINGERPRINT: ssh.fingerprint,
+                NO_COLOR: '1',
+            });
 
             assert.equal(output, program.output, asset.filename + ': captured output');
 
-            if (asset.name.startsWith('saved-')) {
+            if (['saved-sftp', 'saved-ftp'].includes(asset.name)) {
                 assert.equal(await readFile(path.join(working, 'downloaded-hello.txt'), 'utf8'), 'Hello from FileZilla!\n');
             }
 
@@ -223,6 +229,7 @@ await temporaryDemo(async directory => {
     } finally {
         await ftp.close();
         await sftp.close();
+        await ssh.close();
     }
 });
 console.log(manifest.assets.length + ' language variants passed using synthetic XML and local fixtures only.');

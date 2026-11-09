@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {publicWorkspaceArguments} from './public-workspaces.mjs';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import path from 'node:path';
@@ -15,7 +16,7 @@ await mkdir(output, {recursive: true});
 const result = spawnSync(process.execPath, [
     npmCli,
     'pack',
-    '--workspaces',
+    ...await publicWorkspaceArguments(repository),
     '--ignore-scripts',
     '--json',
     '--pack-destination',

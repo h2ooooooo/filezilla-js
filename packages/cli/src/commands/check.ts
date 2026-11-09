@@ -1,15 +1,14 @@
 import {existsSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {join} from 'node:path';
-import {getSiteManager, LogonType, ServerProtocol, type Server} from '@jalsoedesign/filezilla-core';
-import {FtpConnectorFactory} from '@jalsoedesign/filezilla-connector-ftp';
-import {SftpConnectorFactory} from '@jalsoedesign/filezilla-connector-sftp';
+import {getSiteManager, LogonType, ServerProtocol, toConnectionProfile, type Server} from '@jalsoedesign/filezilla-core';
+import {createDocklineBridge, ProfileExecutionError} from '@jalsoedesign/portline-dockline';
 import {AuthError, ConnectorError, CredentialProviderError, DirectoryAccessError, HostTrustError, NotFoundError, NotSupportedError, OperationAbortedError, OperationTimeoutError, PermissionError, ResourceLimitError, UnsupportedProtocolError, type ConnectionStage, type ConnectorOperationOptions, type TransferConnector} from '@jalsoedesign/dockline-abstract';
 
 export type ConnectionCheckStage = ConnectionStage | 'input' | 'list' | 'cleanup';
 export type ConnectionCheckStatus = 'ok' | 'invalid-options' | 'trust-rejected' | 'authentication-failed' |
     'unsupported-protocol' | 'connection-failed' | 'directory-failed' | 'credentials-required' |
-    'invalid-site' | 'cleanup-failed' | 'listing-limit' | 'cancelled' | 'timeout';
+    'invalid-site' | 'client-not-installed' | 'cleanup-failed' | 'listing-limit' | 'cancelled' | 'timeout';
 
 export interface ConnectionCheckResult {
     readonly schemaVersion: 1;
@@ -49,6 +48,7 @@ const outcomes: Record<ConnectionCheckStatus, {exitCode: number; message: string
     'directory-failed': {exitCode: 7, message: 'The requested directory could not be accessed.'},
     'credentials-required': {exitCode: 8, message: 'Credentials are unavailable. Supply a saved credential or --password-stdin.'},
     'invalid-site': {exitCode: 9, message: 'The Site Manager file or exact site selection is invalid or unavailable.'},
+    'client-not-installed': {exitCode: 5, message: 'Install the Dockline client required by this connection.'},
     'cleanup-failed': {exitCode: 10, message: 'The check completed but connection cleanup did not finish successfully.'},
     'listing-limit': {exitCode: 11, message: 'The optional listing exceeded its configured entry limit.'},
     cancelled: {exitCode: 130, message: 'Connection check cancelled.'},
@@ -111,6 +111,23 @@ function safeStage(error: unknown, fallback: ConnectionCheckStage): ConnectionCh
 
 function failure(error: unknown, stage: ConnectionCheckStage, connected: boolean): ConnectionCheckResult {
     const actualStage = safeStage(error, stage);
+
+    if (error instanceof ProfileExecutionError) {
+        if (error.code === 'MISSING_HANDLER') {
+            return {...result('client-not-installed', actualStage, connected), message: error.message};
+        }
+
+        const bridgeStatuses: Record<string, ConnectionCheckStatus> = {
+            MISSING_CREDENTIAL: 'credentials-required',
+            MISSING_TRUST: 'trust-rejected',
+            UNSUPPORTED_PROFILE: 'unsupported-protocol',
+            CONNECTION_SELECTION_REQUIRED: 'unsupported-protocol',
+            INVALID_PROFILE: 'invalid-site',
+            PROFILE_NOT_FOUND: 'invalid-site',
+        };
+
+        return result(bridgeStatuses[error.code] ?? 'connection-failed', actualStage, connected);
+    }
 
     if (error instanceof OperationTimeoutError) {
         return result('timeout', actualStage, connected);
@@ -190,7 +207,14 @@ function validateSiteSelection(server: Server, options: ConnectionCheckOptions):
         throw new NotSupportedError('Unsupported saved authentication mode.');
     }
 
-    if (protocol === ServerProtocol.SFTP && !/^SHA256:[A-Za-z0-9+/]{43}=?$/.test(options.hostKeySha256 ?? '')) {
+    if (
+        protocol === ServerProtocol.SFTP &&
+        (
+            options.hostKeySha256 === undefined ?
+                !(process.stdin.isTTY && process.stderr.isTTY) :
+                !/^SHA256:[A-Za-z0-9+/]{43}=?$/.test(options.hostKeySha256)
+        )
+    ) {
         throw new HostTrustError();
     }
 
@@ -199,34 +223,28 @@ function validateSiteSelection(server: Server, options: ConnectionCheckOptions):
     }
 }
 
-function createConnector(server: Server, options: ConnectionCheckOptions): CheckConnector {
+async function createConnector(server: Server, options: ConnectionCheckOptions): Promise<CheckConnector> {
     validateSiteSelection(server, options);
 
     const protocol = server.propertiesRaw.protocol;
     const logonType = server.propertiesRaw.logonType;
     const password = options.password ?? server.propertiesRaw.password;
-    const operationOptions = {autoReconnect: false, maxTransientRetries: 0, timeoutMs: options.timeoutMs ?? 30000};
+    const operationOptions = {
+        autoReconnect: false,
+        maxTransientRetries: 0,
+        timeoutMs: options.timeoutMs ?? 30000,
+        abortSignal: options.abortSignal,
+    };
 
     if (logonType !== LogonType.anonymous && logonType !== LogonType.key && password === undefined) {
         throw new CredentialProviderError();
     }
 
-    if (protocol === ServerProtocol.SFTP) {
-        const expected = options.hostKeySha256!.replace(/=$/, '');
-
-        return SftpConnectorFactory.fromServer(server, {
-            ...operationOptions,
-            password,
-            passphrase: password,
-            requireTrustPolicy: true,
-            hasTrustPolicy: challenge => challenge.fingerprint === expected,
-            acceptTrustPolicy: () => false,
-        });
-    }
-
-    return FtpConnectorFactory.fromServer(server, {
+    return createDocklineBridge().createFileAdapter(toConnectionProfile(server), {
         ...operationOptions,
-        ...(password === undefined ? {} : {credentialProvider: () => ({type: 'password' as const, password})}),
+        password: logonType === LogonType.key || logonType === LogonType.anonymous ? undefined : password,
+        passphrase: logonType === LogonType.key ? password : undefined,
+        hostFingerprint: protocol === ServerProtocol.SFTP ? options.hostKeySha256?.replace(/=$/, '') : undefined,
     });
 }
 
@@ -255,7 +273,7 @@ export async function checkConnection(
             throw interruption(signal);
         }
 
-        connector = createConnector(server, options);
+        connector = await abortable(createConnector(server, {...options, abortSignal: signal}), signal);
         stage = 'connect';
 
         const operationOptions = {

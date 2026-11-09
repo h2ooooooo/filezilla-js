@@ -1,6 +1,6 @@
 # Transfer tools
 
-Map a saved site with a FileZilla factory, then use the returned Dockline configuration or connector. The operation contracts belong to Dockline; start with [the saved-site program](/guide/quick-start) for FileZilla-specific setup.
+Map a saved Portline profile with the shared bridge, then use the returned Dockline configuration or adapter. The operation contracts belong to Dockline; start with [the saved-site program](/guide/quick-start) for FileZilla-specific setup.
 
 ## Progress and bandwidth
 

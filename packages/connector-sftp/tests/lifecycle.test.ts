@@ -218,29 +218,49 @@ describe('SFTP lifecycle and retries', () => {
     });
 
     it('times out a hung metadata attempt and retries with a fresh client when enabled', async () => {
-        state.configure = (client) => {
-            if (state.clients.length === 1) {
-                client.lstat.mockImplementation(() => new Promise(() => {}));
-            }
-        };
+        vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
 
-        expect((await connector({autoReconnect: true, timeoutMs: 20, maxTransientRetries: 1}).stat('file.txt')).type).toBe('file');
-        expect(state.clients).toHaveLength(2);
-        expect(state.clients[0].client.destroy).toHaveBeenCalled();
+        try {
+            state.configure = (client) => {
+                if (state.clients.length === 1) {
+                    client.lstat.mockImplementation(() => new Promise(() => {}));
+                }
+            };
+
+            const pending = connector({autoReconnect: true, timeoutMs: 20, maxTransientRetries: 1}).stat('file.txt');
+            const completed = expect(pending).resolves.toMatchObject({type: 'file'});
+
+            await vi.advanceTimersByTimeAsync(21);
+            await completed;
+            expect(state.clients).toHaveLength(2);
+            expect(state.clients[0].client.destroy).toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it('shares one retry budget between connection and operation failures', async () => {
-        state.configure = (client) => {
-            if (state.clients.length === 2) {
-                client.lstat.mockImplementation(() => new Promise(() => {}));
-            } else {
-                client.connect.mockRejectedValue(transient());
-            }
-        };
+        vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
 
-        await expect(connector({autoReconnect: true, timeoutMs: 20, maxTransientRetries: 2}).stat('file.txt')).rejects.toBeInstanceOf(ConnectorError);
-        expect(state.clients).toHaveLength(3);
-        expect(state.clients[1].lstat).toHaveBeenCalledTimes(1);
+        try {
+            state.configure = (client) => {
+                if (state.clients.length === 2) {
+                    client.lstat.mockImplementation(() => new Promise(() => {}));
+                } else {
+                    client.connect.mockRejectedValue(transient());
+                }
+            };
+
+            const pending = connector({autoReconnect: true, timeoutMs: 20, maxTransientRetries: 2}).stat('file.txt');
+            const failed = expect(pending).rejects.toBeInstanceOf(ConnectorError);
+
+            await vi.advanceTimersByTimeAsync(25);
+            await failed;
+            expect(state.clients).toHaveLength(3);
+            expect(state.clients[1].lstat).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it('shares one per-attempt deadline between a slow connection and a slow operation', async () => {

@@ -1,9 +1,7 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
 import {FTPError} from 'basic-ftp';
-import {CharsetEncoding, LogonType, Server, ServerProtocol} from '@jalsoedesign/filezilla-core';
 import {FtpConnector, type FtpConnectorConfig} from '@jalsoedesign/dockline-ftp-client';
-import {FtpConnectorFactory} from '../src/index.js';
 import {resolveFilenameEncoding, validateFilename} from '@jalsoedesign/dockline-ftp-client';
 import {AuthError, CredentialProviderError, DirectoryAccessError, NameResolutionError, ConnectionRefusedError, TlsTrustError, NotSupportedError, OperationAbortedError, OperationTimeoutError} from '@jalsoedesign/dockline-abstract';
 
@@ -342,23 +340,6 @@ describe('FTP filename encoding', () => {
         await expect((async () => {
             for await (const _entry of connector.list('', {deep: false})) { /* drain */ }
         })()).rejects.toBeInstanceOf(NotSupportedError);
-    });
-
-    it('maps FileZilla custom encoding and supports ask via an application provider', () => {
-        const server = new Server({
-            ...config,
-            protocol: ServerProtocol.INSECURE_FTP,
-            logonType: LogonType.ask,
-            encodingType: CharsetEncoding.ENCODING_CUSTOM,
-            customEncoding: 'ISO-8859-1',
-        } as any, 'Folder/Site');
-        const connector = FtpConnectorFactory.fromServer(server, {
-            credentialProvider: async () => ({type: 'password', password: 'provider-secret'}),
-        });
-
-        cleanup.push(connector);
-        expect((connector as any).config.siteId).toBe('Folder/Site');
-        expect((connector as any).config.filenameEncoding).toEqual({charset: 'ISO-8859-1'});
     });
 });
 

@@ -9,7 +9,7 @@ Examples start with **TypeScript**. Use the neighbouring JavaScript, MJS or Comm
 | MJS | `example.mjs` | Explicit ES module filename; run `node example.mjs` |
 | CommonJS | `example.cjs` | Uses `require` with asynchronous work inside a function; run `node example.cjs` |
 
-JavaScript and MJS use the same ES module syntax. The extension/configuration tells Node how to load the file. Core is CommonJS with declarations. Connector and CLI packages are ESM; their CommonJS examples use `require` on the supported modern Node runtimes. No separate CommonJS build is required.
+JavaScript and MJS use the same ES module syntax. The extension/configuration tells Node how to load the file. Core and the shared Portline–Dockline bridge are CommonJS packages with declarations; both named ESM imports and `require` work. The CLI package is ESM. No application-specific connector package or separate CommonJS build is required.
 
 The `.ts` programs use ESM and top-level `await`, so their run tabs include `npm pkg set type=module`. This matters in a fresh project created with `npm init -y`.
 

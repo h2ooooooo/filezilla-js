@@ -8,7 +8,9 @@ Find saved FileZilla connection details from your terminal. Search by site name,
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/h2ooooooo/filezilla-js/actions/workflows/ci.yml/badge.svg)](https://github.com/h2ooooooo/filezilla-js/actions/workflows/ci.yml)
 
-Command-line interface for querying FileZilla `sitemanager.xml` files and optionally checking a connection without remote mutations. Metadata queries use [`@jalsoedesign/filezilla-core`](../core/README.md); the opt-in check uses the public FTP/SFTP connectors.
+Command-line interface for querying FileZilla `sitemanager.xml` files and optionally checking a connection without remote mutations. Metadata queries use [`@jalsoedesign/filezilla-core`](../core/README.md); the opt-in check uses the shared Portline–Dockline bridge. Install the matching Dockline protocol client before checking a connection.
+
+The CLI package does not install FTP/SFTP clients automatically. Use `npm install @jalsoedesign/filezilla-cli@rc @jalsoedesign/dockline-sftp-client@rc` for local SFTP checks, or select `@jalsoedesign/dockline-ftp-client@rc` for FTP/FTPS. A missing client reports `client-not-installed` with exit code `5` and the required installation command. SDK SSH command sessions use the shared bridge's `withSsh` API and the optional SSH client; they are not a new FileZilla CLI subcommand.
 
 ## Why
 
@@ -19,7 +21,7 @@ Connection details already live in FileZilla. This CLI lets you query them direc
 Use Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Install from the public npm registry.
 
 ```bash
-npm install -g @jalsoedesign/filezilla-cli
+npm install -g @jalsoedesign/filezilla-cli@rc
 ```
 
 ## Quick start
@@ -216,3 +218,5 @@ See [connection checks](https://h2ooooooo.github.io/filezilla-js/guide/connectio
 MIT © [JalsoeDesign](https://www.jalsoedesign.net)
 
 Profile writing uses write/sync to produce previews, write-status to inspect availability and explicit apply to commit a reviewed plan with fresh guards. See the complete CLI input/output reference in the documentation.
+
+Interactive SFTP checks can omit `--host-key-sha256` and approve the displayed server key. Redirected input and unattended runs require a pin. Approvals last only for the bridge instance and are not saved to disk.

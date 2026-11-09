@@ -79,7 +79,7 @@ const apiSidebar: DefaultTheme.SidebarItem[] = [
                 'link': '/guide/quick-start',
             },
             {
-                'text': 'FileZilla mapping and Dockline',
+                'text': 'Shared bridge and Dockline',
                 'link': '/api/integration',
             },
             {
@@ -89,6 +89,10 @@ const apiSidebar: DefaultTheme.SidebarItem[] = [
             {
                 'text': 'SFTP credentials and host trust',
                 'link': '/guide/sftp',
+            },
+            {
+                'text': 'Run SSH commands',
+                'link': '/guide/ssh',
             },
             {
                 'text': 'Run the local transfer examples',
@@ -165,7 +169,7 @@ const apiSidebar: DefaultTheme.SidebarItem[] = [
                 'link': '/reference/enums',
             },
             {
-                'text': 'Factories',
+                'text': 'Shared connection API',
                 'link': '/reference/factories',
             },
             {

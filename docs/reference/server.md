@@ -33,9 +33,9 @@ The constructor stores its input without runtime schema validation.
 | `keyFile?` | `string` | Saved local private key path |
 | `logonType` | `LogonType` | Saved authentication mode |
 | `timezoneOffset` | `number` | Metadata; connectors do not apply it |
-| `passiveMode` | `PasvMode` | FTP factory maps active/default/passive |
+| `passiveMode` | `PasvMode` | Normalized FTP definition preserves active/default/passive |
 | `maximumMultipleConnections` | `number` | Saved limit; pass it explicitly as `ConnectorPool` `serverMaxConnections` to enforce it |
-| `encodingType` | `CharsetEncoding` | Metadata; connectors do not map this to transport encoding |
+| `encodingType` | `CharsetEncoding` | Normalized definition preserves supported filename encoding |
 | `customEncoding?` | `string` | Saved custom encoding |
 | `bypassProxy` | `boolean` | Metadata; no proxy configuration is implemented |
 | `name` | `string` | FileZilla site name |

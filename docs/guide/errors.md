@@ -4,6 +4,8 @@ Error-handling snippets are contextual recipes around an already selected connec
 
 The generic transport APIs below belong to Dockline and are imported from its packages directly. FileZilla adds saved-site mapping and FileZilla host-key import; see [architecture and import migration](/guide/dockline).
 
+Before a transport opens, the shared bridge can reject selection, credentials, trust, unsupported settings or missing clients with `ProfileExecutionError`. See [bridge error codes](/reference/errors#shared-bridge-failures).
+
 Dockline abstract owns the transport error hierarchy. Its protocol clients re-export the relevant constructors, so compatible installed package instances support shared `instanceof` checks.
 
 ::: code-group

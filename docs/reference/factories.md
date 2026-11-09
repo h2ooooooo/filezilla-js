@@ -1,14 +1,19 @@
-# Factories and transport errors
+# Shared connection integration
 
-FileZilla's `ConnectorFactory` and concrete FTP/SFTP factories translate a native `Server` into a Dockline configuration or disconnected adapter. `ConnectorRegistry` dispatches numeric FileZilla protocols to explicitly registered providers.
+FileZilla does not publish protocol factory or numeric-protocol registry packages. `FileZillaProfileSource` interprets native protocol identifiers and produces Portline connection definitions. The shared `@jalsoedesign/portline-dockline` bridge selects the appropriate installed client.
 
-| API | Result |
+Select an exact saved profile, provide explicit runtime credentials/trust as needed, and use a scoped file or SSH operation. Missing clients and unsupported definitions fail explicitly. A saved SFTP endpoint can be selected for SSH commands; the server determines whether command execution is allowed. FTP definitions do not imply a second SSH endpoint.
+
+| Shared bridge method | Result |
 | --- | --- |
-| `Factory.toConfig(server, options)` | Plain Dockline connection configuration; does not connect |
-| `Factory.fromServer(server, options)` | Dockline adapter with saved settings applied; caller owns connect/disconnect |
-| `registry.register(provider)` | Typed FileZilla registration handle |
-| `registry.fromServer(server, options)` | Runtime dispatch to a registered FileZilla factory |
+| `toConfig(profileOrPath, options)` | Promise of file-transfer configuration; does not open a socket |
+| `toSshConfig(profileOrPath, options)` | Promise of resolved SSH configuration; trust services still belong to `withSsh` |
+| `createFileAdapter(profileOrPath, options)` | Promise of a disconnected Dockline adapter; the caller owns connect/disconnect |
+| `withFiles(profileOrPath, callback, options)` | Connected Dockline file API scoped to the awaited callback |
+| `withSsh(profileOrPath, callback, options)` | Connected SSH command session scoped to the awaited callback |
 
-Both concrete factories expose static and instance methods. Saved logon modes, key paths, directories, passive/TLS choices and charset settings are interpreted by the FileZilla integration; transports and generic connection policy are implemented by Dockline. The shared Portline factory/registry contracts are application-independent, while the FileZilla wrapper uses native `Server` and numeric protocol values.
+`profileOrPath` is a normalized `ConnectionProfile` or an exact path from the bridge's configured source. Use `connectionId` when several compatible definitions exist. Credentials and resolved configuration must not be logged. Callback resources must be fully consumed before the callback returns.
 
-Transport errors come from `@jalsoedesign/dockline-abstract`. Import them directly; FileZilla does not re-export their constructors. A factory can refuse an unsupported saved protocol or logon mode before connecting. An adapter returned by `fromServer` throws Dockline errors during transport operations. See [Dockline errors](https://h2ooooooo.github.io/dockline/guide/errors), [FileZilla mapping](/guide/dockline) and the [exact signatures](/reference/types).
+See the [file-transfer walkthrough](/guide/quick-start), [SSH walkthrough](/guide/ssh) and [connection architecture](/guide/dockline).
+
+The complete application-independent methods, runtime options and error codes are maintained in [Portline's shared execution guide](https://h2ooooooo.github.io/portline/integration/execution).

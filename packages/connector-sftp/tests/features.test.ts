@@ -5,10 +5,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {Readable} from 'node:stream';
 import ssh2 from 'ssh2';
-import {Server, LogonType, ServerProtocol, CharsetEncoding} from '@jalsoedesign/filezilla-core';
 import {AuthError, CredentialProviderError, NotSupportedError, OperationAbortedError, OperationTimeoutError, type TransferProgressEvent} from '@jalsoedesign/dockline-abstract';
 import {SftpConnector, type SftpConnectorConfig} from '@jalsoedesign/dockline-sftp-client';
-import {SftpConnectorFactory} from '../src/index.js';
 import {createLocalSftp} from './local-sftp.js';
 
 const close: (() => Promise<void>)[] = [];
@@ -242,23 +240,6 @@ describe('SFTP reviewed connection features', () => {
         await vi.waitFor(() => expect(server.observations.keepalives).toBeGreaterThan(0));
         await adapter.disconnect();
         expect(states).toEqual(['connecting', 'ready', 'disconnected']);
-    });
-
-    it('checks encoding and factory interactive modes before network access', () => {
-        const site = new Server({
-            host: 'fixture.invalid',
-            port: 22,
-            protocol: ServerProtocol.SFTP,
-            logonType: LogonType.interactive,
-            user: 'fixture',
-            encodingType: CharsetEncoding.ENCODING_UTF8,
-        } as never, 'fixture');
-
-        expect(SftpConnectorFactory.fromServer(site, {keyboardInteractive: 'fixture-code'})).toBeInstanceOf(SftpConnector);
-        expect(() => SftpConnectorFactory.fromServer(site, {
-            keyboardInteractive: 'fixture-code',
-            filenameEncoding: {charset: 'windows-1252'},
-        })).toThrow(NotSupportedError);
     });
 
     it('reports completed transfers only when streams finish and supports UTF-8 paths unchanged', async () => {

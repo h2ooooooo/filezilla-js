@@ -13,3 +13,4 @@ export * from './types/XmlConfigTypes';
 export * from './types/ServerTreeTypes';
 
 export * from './writing';
+export * from './FileZillaHostKeyStore';

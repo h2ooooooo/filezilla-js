@@ -3,9 +3,17 @@ import {mkdtemp, writeFile, readFile, rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {ConnectorError} from '@jalsoedesign/dockline-abstract';
-import {FileZillaHostKeyStore} from '../src/index.js';
-import type {SftpHostKeyChallenge} from '@jalsoedesign/dockline-sftp-client';
+import {FileZillaHostKeyStore, FileZillaHostKeyStoreError} from '../src/FileZillaHostKeyStore';
+
+interface HostKeyChallenge {
+    host: string;
+    port: number;
+    keyType: string;
+    fingerprint: string;
+    publicKey: Buffer;
+    changed: boolean;
+    abortSignal: AbortSignal;
+}
 
 let directory: string;
 let filename: string;
@@ -24,7 +32,7 @@ const key = (value: number) => {
 const keyOne = key(1);
 const keyTwo = key(2);
 const fingerprint = (bytes: Buffer) => `SHA256:${createHash('sha256').update(bytes).digest('base64').replace(/=+$/, '')}`;
-const challenge = (overrides: Partial<SftpHostKeyChallenge> = {}): SftpHostKeyChallenge => ({
+const challenge = (overrides: Partial<HostKeyChallenge> = {}): HostKeyChallenge => ({
     host: 'example.test',
     port: 22,
     keyType: 'ssh-ed25519',
@@ -62,6 +70,10 @@ describe('explicit read-only FileZilla host-key snapshots', () => {
         expect(hasTrustPolicy(challenge({host: 'example.test.'}))).toBe(false);
         expect(hasTrustPolicy(challenge({port: 2222}))).toBe(false);
         expect(hasTrustPolicy(challenge({publicKey: keyTwo, fingerprint: fingerprint(keyOne)}))).toBe(false);
+        expect(store.verify(challenge())).toBe(true);
+        expect(store.verify(challenge({fingerprint: fingerprint(keyTwo)}))).toBe(false);
+        expect(store.verify(challenge({host: 'different.test'}))).toBe(false);
+        expect(store.verify(challenge({port: 2222}))).toBe(false);
         expect(await readFile(filename, 'utf8')).toBe(xml);
     });
 
@@ -119,15 +131,16 @@ describe('explicit read-only FileZilla host-key snapshots', () => {
         document(server() + server('EXAMPLE.TEST')),
         document(server().replace('</Server>', '<Unexpected>true</Unexpected></Server>')),
     ])('rejects malformed or ambiguous trust input: %s', async (xml) => {
-        await expect(load(xml)).rejects.toBeInstanceOf(ConnectorError);
+        await expect(load(xml)).rejects.toBeInstanceOf(FileZillaHostKeyStoreError);
     });
 
     it('rejects noncanonical base64 and invalid UTF-8', async () => {
         const encoded = keyOne.toString('base64');
         const noncanonical = encoded.slice(0, -2) + 'B=';
 
-        await expect(load(document(server().replace(encoded, noncanonical)))).rejects.toBeInstanceOf(ConnectorError);
-        await expect(load(Buffer.from([0xff, 0xfe, 0xfd]))).rejects.toBeInstanceOf(ConnectorError);
+        await expect(load(document(server().replace(encoded, noncanonical))))
+            .rejects.toBeInstanceOf(FileZillaHostKeyStoreError);
+        await expect(load(Buffer.from([0xff, 0xfe, 0xfd]))).rejects.toBeInstanceOf(FileZillaHostKeyStoreError);
     });
 
     it('enforces the 1 MiB limit before parsing the input', async () => {

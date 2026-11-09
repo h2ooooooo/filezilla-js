@@ -6,7 +6,7 @@ Install one package, save a small XML fixture, then list, select and search its 
 
 ```sh
 npm init -y
-npm install @jalsoedesign/filezilla-core
+npm install @jalsoedesign/filezilla-core@rc
 ```
 
 Use a [supported Node.js runtime](/guide/installation). TypeScript is the default; [language setup](/guide/code-examples) explains JavaScript, MJS and CommonJS.

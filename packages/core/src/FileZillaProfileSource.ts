@@ -18,6 +18,8 @@ import {getSiteManager, SiteManager} from './SiteManager';
 import {Server} from './Server';
 import {LogonType} from './enum/LogonType';
 import {ServerProtocol} from './enum/ServerProtocol';
+import {PasvMode} from './enum/PasvMode';
+import {CharsetEncoding} from './enum/CharsetEncoding';
 
 function credentialFor(
     server: Server,
@@ -35,7 +37,7 @@ function credentialFor(
     };
 }
 
-/** Metadata projection; native configuration remains available through Server and SiteManager. */
+/** Secret-free connection definition; native settings remain available through Server and SiteManager. */
 export function toConnectionProfile(
     server: Server,
     source: SourceReference = {id: 'filezilla', application: 'FileZilla'},
@@ -43,11 +45,13 @@ export function toConnectionProfile(
 ): ConnectionProfile {
     const properties = server.propertiesRaw;
     const diagnostics: ProfileDiagnostic[] = [];
+    const unsupportedOptions: string[] = [];
     let remoteDirectory: string | undefined;
 
     try {
         remoteDirectory = server.getRemoteDirectory();
     } catch {
+        unsupportedOptions.push('remoteDirectory');
         diagnostics.push({
             code: 'REMOTE_DIRECTORY_UNAVAILABLE',
             severity: 'warning',
@@ -63,7 +67,6 @@ export function toConnectionProfile(
             authentication = {type: 'anonymous'};
             break;
         case LogonType.normal:
-        case LogonType.account:
             authentication = {type: 'password', credential: credentialFor(server, source, credentialState)};
             break;
         case LogonType.key:
@@ -75,6 +78,8 @@ export function toConnectionProfile(
             };
             break;
         case LogonType.ask:
+            authentication = {type: 'prompt-password', credential: credentialFor(server, source, credentialState)};
+            break;
         case LogonType.interactive:
             authentication = {type: 'interactive'};
             break;
@@ -86,6 +91,9 @@ export function toConnectionProfile(
         id: 'primary',
         endpoint: {host: properties.host, port: properties.port, username: properties.user},
         authentication: [authentication],
+        filenameEncoding: properties.encodingType === CharsetEncoding.ENCODING_CUSTOM ?
+            {charset: properties.customEncoding ?? ''} : undefined,
+        unsupportedOptions,
     };
     let connection: ConnectionDefinition;
 
@@ -102,8 +110,9 @@ export function toConnectionProfile(
             connection = {
                 ...base,
                 kind: 'ftp',
-                protocol: 'ftp',
-                tls: 'optional',
+                protocol: 'ftps',
+                tls: 'explicit',
+                passive: passiveMode(properties.passiveMode),
                 remoteDirectory,
             };
             break;
@@ -113,6 +122,7 @@ export function toConnectionProfile(
                 kind: 'ftp',
                 protocol: 'ftp',
                 tls: 'none',
+                passive: passiveMode(properties.passiveMode),
                 remoteDirectory,
             };
             break;
@@ -122,6 +132,7 @@ export function toConnectionProfile(
                 kind: 'ftp',
                 protocol: 'ftps',
                 tls: 'implicit',
+                passive: passiveMode(properties.passiveMode),
                 remoteDirectory,
             };
             break;
@@ -131,6 +142,7 @@ export function toConnectionProfile(
                 kind: 'ftp',
                 protocol: 'ftps',
                 tls: 'explicit',
+                passive: passiveMode(properties.passiveMode),
                 remoteDirectory,
             };
             break;
@@ -152,6 +164,14 @@ export function toConnectionProfile(
         localDirectory: properties.localDirectory ? {value: properties.localDirectory} : undefined,
         diagnostics,
     };
+}
+
+function passiveMode(mode: PasvMode): boolean | null {
+    if (mode === PasvMode.MODE_ACTIVE) {
+        return false;
+    }
+
+    return mode === PasvMode.MODE_PASSIVE ? true : null;
 }
 
 export interface FileZillaProfileSourceOptions {

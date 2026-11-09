@@ -5,7 +5,6 @@ import {createHash} from 'node:crypto';
 import {posix} from 'node:path';
 import type {StatEntry} from '@flystorage/file-storage';
 import {BandwidthBudget, ConnectorPool, createTransferMonitor, describeCapabilities, checksumDetails, copyFileWithStrategy, publishFile, walk, classifyConnectionError, emitConnectionState, IntegrityError, ResourceLimitError, NotSupportedError, NotFoundError, OperationAbortedError, OperationTimeoutError, PoolClosedError, NameResolutionError, AuthError, type TransferContents, type RenameOptions} from '@jalsoedesign/dockline-abstract';
-import {ConnectorRegistry} from '../src/index.js';
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5));
 const consume = async (stream: Readable): Promise<Buffer> => {
@@ -509,18 +508,5 @@ describe('bounded traversal and discovery', () => {
         expect(report.adapter.atomicReplace.state).toBe('unsupported');
         expect(describeCapabilities('ftp', ['HASH SHA-256;SHA-512;']).server.checksum.algorithms)
             .toEqual(['sha256', 'sha512']);
-    });
-
-    it('registers providers explicitly and rejects duplicate or unsupported protocols', () => {
-        const registry = new ConnectorRegistry();
-        const factory = {fromServer: vi.fn().mockReturnValue({})};
-        const site = {propertiesRaw: {protocol: 1}} as any;
-        const registration = registry.register({protocols: [1], factory});
-
-        registration.fromServer(site, {flag: true});
-        expect(factory.fromServer).toHaveBeenCalledWith(site, {flag: true});
-        expect(() => registry.register({protocols: [1], factory})).toThrow('already');
-        expect(() => registry.fromServer({propertiesRaw: {protocol: 999}} as any)).toThrow('No provider');
-        expect(factory.fromServer).toHaveBeenCalledTimes(1);
     });
 });

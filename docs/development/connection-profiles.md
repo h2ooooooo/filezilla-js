@@ -2,7 +2,7 @@
 
 For executable source/list examples start with [normalized profiles](/api/profiles).
 
-The shared contracts, queries, native storage safeguards and CLI infrastructure are supplied by Portline. FileZilla retains its own models, adapters, writer factory, executable and Dockline connectors.
+The shared contracts, queries, native storage safeguards and CLI infrastructure are supplied by Portline. FileZilla retains its own models, native adapters, writer factory and executable. The optional shared `@jalsoedesign/portline-dockline` integration supplies connection conversion and scoped execution for every supported reader.
 
 [Portline architecture](https://github.com/h2ooooooo/portline/blob/main/docs/connection-profiles.md) · [Ecosystem directory](https://h2ooooooo.github.io/portline/) · [Development](https://github.com/h2ooooooo/portline/blob/main/docs/development.md)
 

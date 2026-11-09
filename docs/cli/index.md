@@ -21,4 +21,4 @@ Terminal commands do not depend on a programming language. Shell-specific syntax
 
 [Every command and flag](/reference/cli-help) documents inputs. [Captured output](/reference/cli-output) documents coloured tables, redaction, JSON shapes, success and failure. [Query behavior](/reference/cli) explains selection and credential visibility.
 
-The CLI does not provide upload/download subcommands. Use [Dockline CLI](https://h2ooooooo.github.io/dockline/cli/) for generic terminal transfers or [FileZilla factories](/api/integration) to connect saved sites from code. Applying profile changes remains a separate reviewed operation with process/lock checks and backups.
+The CLI does not provide upload/download subcommands. Use [Dockline CLI](https://h2ooooooo.github.io/dockline/cli/) for generic terminal transfers or [the shared Portline integration](/api/integration) to connect saved sites from code. Applying profile changes remains a separate reviewed operation with process/lock checks and backups.

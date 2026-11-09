@@ -29,3 +29,9 @@ filezilla-js apply --file sitemanager.xml --plan plan.json --json
 ```
 
 Recovery backups can contain original stored credentials and must remain private. See [Portline's writing guide](https://h2ooooooo.github.io/portline/profile-writing) for format boundaries, recovery and platform limitations.
+
+## Execution settings and write intent
+
+Normalized profiles now retain more execution settings than native writers can save. The writer refuses profiles with nonempty `unsupportedOptions`, an explicit boolean `passive` setting, `filenameEncoding`, or saved host fingerprint pins. It does not silently discard those requirements. A default `passive: null` may be omitted. Use an intentionally constructed write profile containing only supported intent; keep the complete original definition for execution.
+
+Password-prompt authentication is represented by `prompt-password`, separately from keyboard-interactive `interactive`. Credential references and values are omitted from preview artifacts; saved host trust is never copied as an approval. See [Portline writing limits](https://h2ooooooo.github.io/portline/profile-writing).

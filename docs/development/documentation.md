@@ -28,6 +28,8 @@ After building, run `npm run docs:api` to regenerate the public declaration refe
 
 Run `npm run docs:examples:check` after changing a program or run tab. It checks language order, filenames, downloadable source, syntax, strict TypeScript types and local-fixture results. Keep complete programs separate from contextual recipes; label prerequisites, output and both ends of transfers.
 
+The saved FTP, SFTP and SSH programs run against disposable loopback fixtures. The SSH fixture accepts only the example's quoted `uname -s` request and returns synthetic output; it never executes a host command. `dockline-ssh-client` is a development dependency for checking those programs, while the published core reader remains free of transport dependencies.
+
 
 ## Keep onboarding focused
 
@@ -43,6 +45,8 @@ npm run check:locks
 npm run test:locks
 npm run check:bootstrap -- --artifacts /path/to/artifacts
 ```
+
+In Windows PowerShell, use `npm.cmd` for commands that forward arguments after `--` if the installed `npm.ps1` wrapper consumes that separator. The script must receive both `--artifacts` and its directory; use `npm.cmd run release:lock -- --artifacts C:/path/to/artifacts` in that case.
 
 The lock command uses real package metadata and SHA-512 hashes from those artifacts, retaining canonical public npm URLs. The bootstrap check creates a disposable checkout, installs locked versions through a temporary read-only registry, and runs builds, lint, tests and available API/example checks. It does not change npm user configuration or relax remote-package restrictions. Node.js, the repository's declared npm version and the system `tar` command must be available.
 

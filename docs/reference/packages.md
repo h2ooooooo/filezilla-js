@@ -2,14 +2,11 @@
 
 | Package | Responsibility |
 | --- | --- |
-| `@jalsoedesign/filezilla-core` | FileZilla readers/models, selected credentials, metadata, normalized profile source and guarded writer factory |
-| `@jalsoedesign/filezilla-cli` | Native profile queries, explicit connection checks and preview/sync/apply/status commands |
-| `@jalsoedesign/filezilla-connector-abstract` | FileZilla-specific connector factory and numeric-protocol registry |
-| `@jalsoedesign/filezilla-connector-ftp` | Map saved FTP/FTPS settings to Dockline configuration/adapters |
-| `@jalsoedesign/filezilla-connector-sftp` | Map saved SFTP settings and import modern FileZilla trusted host keys |
+| `@jalsoedesign/filezilla-core` | Native readers/models, credential provider, complete Portline profiles, host-key import and guarded writer factory |
+| `@jalsoedesign/filezilla-cli` | Queries, connection checks and preview/sync/apply/status commands |
+| `@jalsoedesign/portline-dockline` | Optional shared conversion and scoped connection API for all Portline readers |
+| Dockline protocol clients | Optional execution of FTP/FTPS, SFTP or SSH operations |
 
-These packages live in the FileZilla repository. Shared Portline packages live in their own repository. Dockline and dockline-keys remain separate from FileZilla and provide generic execution and key handling.
+The public FileZilla packages are core and CLI. Native interpretation stays in FileZilla; execution integration lives in Portline. Protocol regression workspaces are private test infrastructure.
 
-FileZilla connector entry points expose only their integration APIs. Generic adapter classes, errors, pools, encoding helpers and transfer types are imported from Dockline directly. Use package-root imports; the connector packages do not expose generated `dist/*` paths. See [architecture and migration](/guide/dockline), [public API](/reference/public-api) and [exact signatures](/reference/types).
-
-Versions and dependency ranges are declared in each package manifest. The [ecosystem directory](https://h2ooooooo.github.io/portline/ecosystem) links the independent repositories and npm identities without maintaining a second version list.
+Use package-root imports. Versions and dependency ranges are declared in manifests. See [installation](/guide/installation), [architecture](/guide/dockline), [public APIs](/reference/public-api) and [TypeScript signatures](/reference/types).

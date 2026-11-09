@@ -177,7 +177,7 @@ Redirect input from the caller's secret provider or a protected descriptor. Pass
 
 Supported saved authentication modes are normal password, ask with a supplied stdin password, FTP anonymous and SFTP key files. Interactive, account, profile and ADC modes are rejected by this command; applications can use the richer connector APIs when those workflows are required. SSH agent and keyboard-interactive CLI flags are not provided.
 
-SFTP requires `requireTrustPolicy: true`, an exact pinned-fingerprint comparison and an acceptance hook that always rejects unknown keys. A missing or mismatched pin cannot send the password to the server. The command never updates a trust store or automatically approves a changed key. Standard TLS certificate verification remains enabled for FTP/FTPS configurations; SSH fingerprint flags are rejected for FTP.
+Interactive CLI checks can omit the fingerprint and confirm the displayed host key on standard error. Unattended checks require an exact independently verified host fingerprint. An unapproved host key or mismatched explicit pin cannot receive the password. The command never writes approvals to disk. Unknown hosts require explicit approval; a changed session-approved key requires explicit replacement. Standard TLS certificate verification remains enabled for FTP/FTPS configurations; SSH fingerprint flags are rejected for FTP.
 
 ## Limits and cleanup
 
@@ -212,6 +212,7 @@ A successful check without optional directory work looks like:
 | `3` | `trust-rejected` | Missing/mismatched SFTP pin or failed TLS/server trust. |
 | `4` | `authentication-failed` | The server rejected authentication. |
 | `5` | `unsupported-protocol` | Unsupported protocol, authentication mode or required connector capability. |
+| `5` | `client-not-installed` | Required optional Dockline client is missing; the message includes its installation command. |
 | `6` | `connection-failed` | DNS, connection refusal or another connection failure. |
 | `7` | `directory-failed` | Directory lookup, listing or permission failure. |
 | `8` | `credentials-required` | No usable credential, invalid redirected credential input or unavailable provider. |

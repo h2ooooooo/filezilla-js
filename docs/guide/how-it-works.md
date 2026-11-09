@@ -98,7 +98,7 @@ The legacy `getSiteManager` reader can include supported passwords unless `inclu
 
 ## Reading, connecting and writing
 
-Listing and searching sites reads saved settings only. FileZilla factories can map a selected site's supported settings into a Dockline connection; Dockline performs the requested remote operation.
+Listing and searching sites reads saved settings only. The shared Portline–Dockline bridge maps the selected normalized profile into a Dockline connection; Dockline performs the requested remote operation.
 
 Native profile writing is a separate preview/apply workflow. It does not happen as a side effect of reading. See [profile writing](/api/writing) for lock checks, backups and supported fields.
 

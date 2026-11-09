@@ -1,10 +1,7 @@
 import {describe, expect, it, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
 import {FTPError} from 'basic-ftp';
-import {ConnectorFactory} from '@jalsoedesign/filezilla-connector-abstract';
-import {Server, ServerProtocol, LogonType} from '@jalsoedesign/filezilla-core';
 import {FtpConnector} from '@jalsoedesign/dockline-ftp-client';
-import {FtpConnectorFactory} from '../src/index.js';
 import {AuthError, PermissionError, OperationAbortedError, OperationTimeoutError, ConnectionClosedError} from '@jalsoedesign/dockline-abstract';
 
 const config = {
@@ -449,28 +446,5 @@ describe('FTP stream lifetime owns the command queue', () => {
         expect(client.close).toHaveBeenCalled();
         expect(state.connected).toBe(false);
         await expect(connector.directoryExists('/', {})).resolves.toBe(true);
-    });
-});
-
-describe('FileZilla FTP factory integration', () => {
-    it('supports both factory forms and forwards connection/operation options', () => {
-        const server = new Server({
-            host: 'fixture',
-            port: 21,
-            protocol: ServerProtocol.INSECURE_FTP,
-            logonType: LogonType.normal,
-            user: 'test',
-            password: 'fixture',
-        } as any, 'Fixture');
-        const factory: ConnectorFactory<FtpConnector, {autoReconnect?: boolean}> = new FtpConnectorFactory();
-        const instance = factory.fromServer(server, {autoReconnect: true}) as any;
-        const staticValue = FtpConnectorFactory.fromServer(server, {
-            maxTransientRetries: 0,
-            secureOptions: {rejectUnauthorized: true},
-        }) as any;
-
-        expect(instance.config.autoReconnect).toBe(true);
-        expect(staticValue.config.maxTransientRetries).toBe(0);
-        expect(staticValue.config.secureOptions.rejectUnauthorized).toBe(true);
     });
 });

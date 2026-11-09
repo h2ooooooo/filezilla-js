@@ -1,11 +1,34 @@
 import {describe, expect, it} from 'vitest';
 import path from 'node:path';
 import {CredentialResolver} from '@jalsoedesign/portline-core';
-import {FileZillaProfileSource, getSiteManager, LogonType, ServerProtocol, toConnectionProfile} from '../src/index';
+import {CharsetEncoding, FileZillaProfileSource, getSiteManager, LogonType, PasvMode, ServerProtocol, toConnectionProfile} from '../src/index';
 
 const fixture = path.join(__dirname, '../fixtures/general/sitemanager.multi.xml');
 
 describe('normalized FileZilla profiles', () => {
+    it('preserves execution settings and separates prompting from keyboard-interactive authentication', () => {
+        const server = getSiteManager(fixture).getServers()[0];
+
+        Object.assign(server.propertiesRaw, {
+            protocol: ServerProtocol.FTP,
+            passiveMode: PasvMode.MODE_ACTIVE,
+            encodingType: CharsetEncoding.ENCODING_CUSTOM,
+            customEncoding: 'windows-1252',
+            logonType: LogonType.ask,
+        });
+
+        expect(toConnectionProfile(server).connections[0]).toMatchObject({
+            protocol: 'ftps',
+            tls: 'explicit',
+            passive: false,
+            filenameEncoding: {charset: 'windows-1252'},
+            authentication: [{type: 'prompt-password'}],
+        });
+        server.propertiesRaw.logonType = LogonType.interactive;
+        expect(toConnectionProfile(server).connections[0].authentication).toEqual([{type: 'interactive'}]);
+        server.propertiesRaw.remoteDirectory = '3 0 3 abc';
+        expect(toConnectionProfile(server).connections[0].unsupportedOptions).toContain('remoteDirectory');
+    });
     it('lists metadata without loading secrets and explicitly resolves only the selected credential', async () => {
         const source = FileZillaProfileSource.fromFile(fixture);
         const profiles = source.list();

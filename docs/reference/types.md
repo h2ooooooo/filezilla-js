@@ -20,7 +20,7 @@ export declare function run(): Promise<void>;
 import { type Server } from '@jalsoedesign/filezilla-core';
 import { type ConnectionStage } from '@jalsoedesign/dockline-abstract';
 export type ConnectionCheckStage = ConnectionStage | 'input' | 'list' | 'cleanup';
-export type ConnectionCheckStatus = 'ok' | 'invalid-options' | 'trust-rejected' | 'authentication-failed' | 'unsupported-protocol' | 'connection-failed' | 'directory-failed' | 'credentials-required' | 'invalid-site' | 'cleanup-failed' | 'listing-limit' | 'cancelled' | 'timeout';
+export type ConnectionCheckStatus = 'ok' | 'invalid-options' | 'trust-rejected' | 'authentication-failed' | 'unsupported-protocol' | 'connection-failed' | 'directory-failed' | 'credentials-required' | 'invalid-site' | 'client-not-installed' | 'cleanup-failed' | 'listing-limit' | 'cancelled' | 'timeout';
 export interface ConnectionCheckResult {
     readonly schemaVersion: 1;
     readonly ok: boolean;
@@ -64,133 +64,6 @@ export declare function createFileZillaCliSource(manager: SiteManager, source?: 
 export declare function fileZillaCommandContext(ctx: CommandContext): ProfileCommandContext<Server>;
 ```
 
-## @jalsoedesign/filezilla-connector-abstract
-
-### index.d.ts
-
-```ts
-export { ConnectorFactory } from './ConnectorFactory.js';
-export { ConnectorRegistry } from './ConnectorRegistry.js';
-export type { RegisteredProvider, Registration } from './ConnectorRegistry.js';
-```
-
-### ConnectorFactory.d.ts
-
-```ts
-import type { Server } from '@jalsoedesign/filezilla-core';
-import type { StorageAdapter } from '@flystorage/file-storage';
-import { ProfileConnectorFactory } from '@jalsoedesign/portline-abstract';
-/** Factories support instances for dependency injection and static convenience methods. */
-export declare abstract class ConnectorFactory<TConnector extends StorageAdapter, TOptions = unknown> extends ProfileConnectorFactory<Server, TConnector, TOptions> {
-    abstract fromServer(server: Server, options?: TOptions): TConnector;
-    fromProfile(server: Server, options?: TOptions): TConnector;
-}
-```
-
-### ConnectorRegistry.d.ts
-
-```ts
-import type { Server, ServerProtocol } from '@jalsoedesign/filezilla-core';
-import type { StorageAdapter } from '@flystorage/file-storage';
-export interface RegisteredProvider<TConnector extends StorageAdapter, TOptions> {
-    readonly protocols: readonly ServerProtocol[];
-    readonly factory: {
-        fromServer(server: Server, options?: TOptions): TConnector;
-    };
-    readonly validateOptions?: (options: unknown) => void;
-}
-export interface Registration<TConnector extends StorageAdapter, TOptions> {
-    readonly fromServer: (server: Server, options?: TOptions) => TConnector;
-}
-/** Explicit providers only. Registration handles preserve provider-specific option and result types. */
-export declare class ConnectorRegistry {
-    private readonly registry;
-    register<TConnector extends StorageAdapter, TOptions>(provider: RegisteredProvider<TConnector, TOptions>, options?: {
-        replace?: boolean;
-    }): Registration<TConnector, TOptions>;
-    /** Runtime dispatch cannot infer transport-specific options; use the typed registration handle where possible. */
-    fromServer(server: Server, options?: unknown): StorageAdapter;
-    protocols(): readonly ServerProtocol[];
-}
-```
-
-## @jalsoedesign/filezilla-connector-ftp
-
-### index.d.ts
-
-```ts
-export { FtpConnectorFactory } from './FtpConnectorFactory.js';
-export type { FtpConnectorFactoryOptions } from './FtpConnectorFactory.js';
-```
-
-### FtpConnectorFactory.d.ts
-
-```ts
-import type { FtpTransferConfig } from '@jalsoedesign/dockline-ftp-client';
-import { Server } from '@jalsoedesign/filezilla-core';
-import { FtpConnector } from '@jalsoedesign/dockline-ftp-client';
-import { ConnectorFactory } from '@jalsoedesign/filezilla-connector-abstract';
-import { type ConnectorOperationOptions, type ConnectorConnectionOptions } from '@jalsoedesign/dockline-abstract';
-import type { ConnectionOptions } from 'node:tls';
-import type { FtpFilenameEncodingOptions } from '@jalsoedesign/dockline-ftp-client';
-export interface FtpConnectorFactoryOptions extends ConnectorOperationOptions, ConnectorConnectionOptions {
-    secureOptions?: ConnectionOptions;
-    filenameEncoding?: FtpFilenameEncodingOptions;
-}
-export declare class FtpConnectorFactory extends ConnectorFactory<FtpConnector, FtpConnectorFactoryOptions> {
-    fromServer(server: Server, options?: FtpConnectorFactoryOptions): FtpConnector;
-    toConfig(server: Server, options?: FtpConnectorFactoryOptions): FtpTransferConfig;
-    static fromServer(server: Server, options?: FtpConnectorFactoryOptions): FtpConnector;
-    static toConfig(server: Server, options?: FtpConnectorFactoryOptions): FtpTransferConfig;
-    private static toConnectorConfig;
-}
-```
-
-## @jalsoedesign/filezilla-connector-sftp
-
-### index.d.ts
-
-```ts
-export { SftpConnectorFactory } from './SftpConnectorFactory.js';
-export type { SftpConnectorFactoryOptions } from './SftpConnectorFactory.js';
-export { FileZillaHostKeyStore } from './FileZillaHostKeyStore.js';
-```
-
-### SftpConnectorFactory.d.ts
-
-```ts
-import type { SftpTransferConfig } from '@jalsoedesign/dockline-sftp-client';
-import { Server } from '@jalsoedesign/filezilla-core';
-import { ConnectorFactory } from '@jalsoedesign/filezilla-connector-abstract';
-import { SftpConnector, type SftpConnectorConfig } from '@jalsoedesign/dockline-sftp-client';
-export type SftpConnectorFactoryOptions = Omit<SftpConnectorConfig, 'host' | 'port' | 'username' | 'initialPath'>;
-export declare class SftpConnectorFactory extends ConnectorFactory<SftpConnector, SftpConnectorFactoryOptions> {
-    fromServer(server: Server, options?: SftpConnectorFactoryOptions): SftpConnector;
-    toConfig(server: Server, options?: SftpConnectorFactoryOptions): SftpTransferConfig;
-    static fromServer(server: Server, options?: SftpConnectorFactoryOptions): SftpConnector;
-    static toConfig(server: Server, options?: SftpConnectorFactoryOptions): SftpTransferConfig;
-    private static toConnectorConfig;
-}
-```
-
-### FileZillaHostKeyStore.d.ts
-
-```ts
-import type { SftpHostKeyChallenge } from '@jalsoedesign/dockline-sftp-client';
-/**
- * Read-only snapshot of modern FileZilla hostkeys.xml, loaded from an explicit path.
- * This imports exact host-key pins only; it never adopts weaker algorithm policy.
- */
-export declare class FileZillaHostKeyStore {
-    private readonly entries;
-    private constructor();
-    static fromFile(filename: string): Promise<FileZillaHostKeyStore>;
-    /** Bound callback: safe to pass directly as connector hasTrustPolicy. */
-    readonly hasTrustPolicy: (challenge: SftpHostKeyChallenge) => boolean;
-    getKnownFingerprints(host: string, port: number): string[];
-}
-```
-
 ## @jalsoedesign/filezilla-core
 
 ### index.d.ts
@@ -210,6 +83,7 @@ export * from './enum/ServerType';
 export * from './types/XmlConfigTypes';
 export * from './types/ServerTreeTypes';
 export * from './writing';
+export * from './FileZillaHostKeyStore';
 ```
 
 ### SiteManager.d.ts
@@ -275,7 +149,7 @@ export declare class SiteManager {
 import type { Awaitable, ConnectionProfile, CredentialProvider, CredentialReference, CredentialResult, CredentialState, ProfileSearchOptions, ProfileSource, SourceReference } from '@jalsoedesign/portline-abstract';
 import { SiteManager } from './SiteManager';
 import { Server } from './Server';
-/** Metadata projection; native configuration remains available through Server and SiteManager. */
+/** Secret-free connection definition; native settings remain available through Server and SiteManager. */
 export declare function toConnectionProfile(server: Server, source?: SourceReference, credentialState?: CredentialState): ConnectionProfile;
 export interface FileZillaProfileSourceOptions {
     readonly source?: SourceReference;
@@ -675,4 +549,34 @@ import { NativeProfileWriter } from '@jalsoedesign/portline-platform';
 import type { NativeWriteOptions } from '@jalsoedesign/portline-platform';
 import type { SourceReference } from '@jalsoedesign/portline-abstract';
 export declare function createFileZillaWriter(source: SourceReference, options?: Omit<NativeWriteOptions, 'source' | 'application'>): NativeProfileWriter;
+```
+
+### FileZillaHostKeyStore.d.ts
+
+```ts
+export interface FileZillaHostKeyChallenge {
+    readonly host: string;
+    readonly port: number;
+    readonly publicKey: Buffer;
+}
+export declare class FileZillaHostKeyStoreError extends Error {
+}
+/**
+ * Read-only snapshot of modern FileZilla hostkeys.xml, loaded from an explicit path.
+ * This imports exact host-key pins only; it never adopts weaker algorithm policy.
+ */
+export declare class FileZillaHostKeyStore {
+    private readonly entries;
+    private constructor();
+    static fromFile(filename: string): Promise<FileZillaHostKeyStore>;
+    /** Bound callback: safe to pass directly as connector hasTrustPolicy. */
+    readonly hasTrustPolicy: (challenge: FileZillaHostKeyChallenge) => boolean;
+    /** Common trust-provider callback; only exact host, port and SHA-256 pins match. */
+    readonly verify: (challenge: {
+        host: string;
+        port: number;
+        fingerprint: string;
+    }) => boolean;
+    getKnownFingerprints(host: string, port: number): string[];
+}
 ```

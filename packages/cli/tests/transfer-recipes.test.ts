@@ -4,7 +4,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
-import {Server, LogonType, ServerProtocol} from '@jalsoedesign/filezilla-core';
+import {Server, LogonType, ServerProtocol, toConnectionProfile} from '@jalsoedesign/filezilla-core';
+import {createDocklineBridge} from '@jalsoedesign/portline-dockline';
 import {IntegrityError} from '@jalsoedesign/dockline-abstract';
 import {
     createPinnedSftp,
@@ -51,6 +52,32 @@ function connectorFixture(contents = Buffer.from('complete fixture'), advertised
 }
 
 describe('typed transfer recipe ownership', () => {
+    it('refuses an FTP profile in the pinned SFTP recipe before loading a client', async () => {
+        const loadPackage = vi.fn();
+        const bridge = createDocklineBridge({loadPackage});
+        const profile = {
+            id: 'ftp',
+            path: 'ftp',
+            name: 'FTP',
+            source: {id: 'fixture', application: 'Fixture'},
+            diagnostics: [],
+            connections: [
+                {
+                    id: 'primary',
+                    kind: 'ftp' as const,
+                    protocol: 'ftp' as const,
+                    tls: 'none' as const,
+                    endpoint: {host: '127.0.0.1', port: 21},
+                    authentication: [{type: 'anonymous' as const}],
+                },
+            ],
+        };
+        const pin = 'SHA256:' + Buffer.alloc(32).toString('base64').replace(/=+$/, '');
+
+        await expect(createPinnedSftp(bridge, profile, pin)).rejects.toThrow('requires an SSH/SFTP');
+        expect(loadPackage).not.toHaveBeenCalled();
+    });
+
     it('consumes the whole download before closing and never overwrites an existing local file', async () => {
         const local = join(await directory(), 'download.txt');
         const fixture = connectorFixture();
@@ -128,7 +155,12 @@ async function verifiedFixture() {
         directoryComparison: false,
     }, 'Disposable fixture');
 
-    return {...endpoint, factory: () => createPinnedSftp(site, endpoint.fingerprint)};
+    const profile = toConnectionProfile(site);
+    const bridge = createDocklineBridge({
+        credentials: {resolve: async () => ({state: 'available', value: 'fixture-password'})},
+    });
+
+    return {...endpoint, factory: () => createPinnedSftp(bridge, profile, endpoint.fingerprint)};
 }
 
 describe('typed recipes against disposable SFTP', () => {

@@ -1,7 +1,10 @@
 import {defineConfig} from 'vitepress';
+import {auditBuiltDocs, installBaseLinks} from '../../scripts/doc-links.mjs';
 import {nav, sidebar} from './navigation.mjs';
 
 const githubPages = process.env.FILEZILLA_GITHUB_PAGES === 'true';
+
+const docsBase = process.env.DOCS_BASE || '/';
 
 export default defineConfig({
     title: 'FileZilla JS',
@@ -9,8 +12,18 @@ export default defineConfig({
     lang: 'en-US',
     appearance: false,
     cleanUrls: !githubPages,
-    base: process.env.DOCS_BASE || '/',
-    markdown: {theme: 'github-dark-high-contrast'},
+    base: docsBase,
+    markdown: {
+        theme: 'github-dark-high-contrast',
+        config(markdown) {
+            installBaseLinks(markdown, docsBase);
+        },
+    },
+    async buildEnd(site) {
+        const result = await auditBuiltDocs(site.outDir, site.site.base, 'filezilla-js');
+
+        console.log(`Documentation links verified: ${result.pages} pages, ${result.links} links.`);
+    },
     head: [['meta', {name: 'theme-color', content: '#171a1d'}]],
     vite: {
         css: {preprocessorOptions: {scss: {api: 'modern'}}},

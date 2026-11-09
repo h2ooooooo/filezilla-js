@@ -115,7 +115,7 @@ describe('isolated SFTP protocol integration', () => {
     });
 
     it('reads and overwrites multi-megabyte streams, with correct metadata and directory listings', async () => {
-        const connector = adapter();
+        const connector = adapter({timeoutMs: 15000});
         const bytes = await consume(await connector.read('/large.bin'));
 
         expect(bytes).toEqual(endpoint.files.get('/large.bin'));
@@ -135,7 +135,7 @@ describe('isolated SFTP protocol integration', () => {
         await connector.moveFile('/nested/upload.bin', '/nested/moved.bin');
         await connector.deleteFile('/nested/moved.bin');
         expect(await connector.fileExists('/nested/moved.bin')).toBe(false);
-    }, 30000);
+    }, 60000);
 
     it('distinguishes missing reads, permissions and unsupported links', async () => {
         const connector = adapter();

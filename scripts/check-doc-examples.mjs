@@ -16,7 +16,10 @@ const require = createRequire(import.meta.url);
 const tsx = pathToFileURL(require.resolve('tsx')).href;
 const labels = ['TypeScript', 'JavaScript', 'MJS', 'CommonJS'];
 const extensions = ['ts', 'js', 'mjs', 'cjs'];
-const noFilename = code => code.replace(/^\/\/ [\w-]+\.(?:ts|js|mjs|cjs)\n/, '').trim();
+const noFilename = code => code
+    .replaceAll('\r\n', '\n')
+    .replace(/^\/\/ [\w-]+\.(?:ts|js|mjs|cjs)\n/, '')
+    .trim();
 const pages = [];
 let groups = 0;
 let programsFound = 0;
